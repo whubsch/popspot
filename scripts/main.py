@@ -10,6 +10,7 @@ import argparse
 import json
 import sys
 import time
+from datetime import datetime, timezone
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -359,7 +360,37 @@ def write_geojson(data: PlaceData, country_code: str) -> None:
 # ---------------------------------------------------------------------------
 # Plot
 # ---------------------------------------------------------------------------
-def plot(data: PlaceData, country: Country) -> None:
+# ---------------------------------------------------------------------------
+# Dark-theme palette (mirrors the website CSS variables)
+# ---------------------------------------------------------------------------
+_BG = "#0e0f13"  # --bg
+_SURFACE = "#16181f"  # --surface
+_SURFACE2 = "#1e2029"  # --surface-2
+_BORDER = "#2a2d3a"  # --border
+_TEXT = "#e8eaf0"  # --text
+_TEXT_MUTED = "#6b7280"  # --text-muted
+
+
+def plot(data: PlaceData, country: Country, generated_at: str | None = None) -> None:
+    # ── Dark-theme rcParams ──────────────────────────────────────────────────
+    plt.rcParams.update(
+        {
+            "figure.facecolor": _BG,
+            "axes.facecolor": _SURFACE,
+            "axes.edgecolor": _BORDER,
+            "axes.labelcolor": _TEXT,
+            "xtick.color": _TEXT_MUTED,
+            "ytick.color": _TEXT,
+            "text.color": _TEXT,
+            "grid.color": _BORDER,
+            "legend.facecolor": _SURFACE2,
+            "legend.edgecolor": _BORDER,
+            "legend.labelcolor": _TEXT,
+            "savefig.facecolor": _BG,
+            "savefig.edgecolor": _BG,
+        }
+    )
+
     fig, ax = plt.subplots(figsize=(14, 6))
 
     y_positions = {pt: i for i, pt in enumerate(PLACE_TYPES)}
@@ -378,7 +409,7 @@ def plot(data: PlaceData, country: Country) -> None:
         ax.scatter(
             pops_arr,
             y + jitter,
-            alpha=0.35,
+            alpha=0.45,
             s=10,
             color=color,
             linewidths=0,
@@ -432,7 +463,7 @@ def plot(data: PlaceData, country: Country) -> None:
 
     # Axes
     ax.set_xscale("log")
-    ax.set_xlabel("Population (log scale)", fontsize=12)
+    ax.set_xlabel("Population (log scale)", fontsize=12, color=_TEXT_MUTED)
     ax.set_yticks(list(y_positions.values()))
     ax.set_yticklabels([pt.capitalize() for pt in PLACE_TYPES], fontsize=12)
     ax.set_ylim(-0.75, len(PLACE_TYPES) - 0.25)
@@ -441,10 +472,17 @@ def plot(data: PlaceData, country: Country) -> None:
         "\n(city / town / village)",
         fontsize=14,
         pad=14,
+        color=_TEXT,
     )
 
+    # Spines
+    for spine in ax.spines.values():
+        spine.set_edgecolor(_BORDER)
+
     # Grid
-    ax.xaxis.grid(True, which="both", linestyle="--", linewidth=0.5, alpha=0.6)
+    ax.xaxis.grid(
+        True, which="both", linestyle="--", linewidth=0.5, alpha=0.4, color=_BORDER
+    )
     ax.set_axisbelow(True)
 
     # Legend / counts
@@ -454,13 +492,29 @@ def plot(data: PlaceData, country: Country) -> None:
         )
         for pt in PLACE_TYPES
     ]
-    ax.legend(handles=patches, loc="lower right", fontsize=9, framealpha=0.85)
+    ax.legend(handles=patches, loc="lower right", fontsize=9, framealpha=0.9)
+
+    # ── Timestamp annotation ─────────────────────────────────────────────────
+    ts = generated_at or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    fig.text(
+        0.99,
+        0.01,
+        f"Data as of {ts}",
+        ha="right",
+        va="bottom",
+        fontsize=7.5,
+        color=_TEXT_MUTED,
+        fontstyle="italic",
+    )
 
     fig.tight_layout()
     out_path = f"output/img/osm_population_plot_{country.code}.png"
     plt.savefig(out_path, dpi=150)
     print(f"Plot saved to {out_path}")
     plt.close(fig)
+
+    # Reset rcParams so subsequent calls (if any) are not affected
+    plt.rcParams.update(plt.rcParamsDefault)
 
 
 # ---------------------------------------------------------------------------
@@ -481,12 +535,14 @@ def run_for_country(country: Country, *, show_plot: bool = False) -> None:
         )
         return
 
+    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
     print(f"\nTotal records: {total:,}")
     print("\nFitting log-normal distributions and scoring classification …")
     analyze_classification(data)
 
     write_geojson(data, country.code)
-    plot(data, country)
+    plot(data, country, generated_at=generated_at)
 
     if show_plot:
         plt.show()

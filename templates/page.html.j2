@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PopSpot — {{ country }}</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -252,6 +253,90 @@
     .osm-link:hover { color: #fff; border-color: #4a5568; }
     .osm-link svg { flex: none; }
 
+    /* ── Header nav links ── */
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .header-nav a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 0.25rem 0.65rem;
+      border-radius: 5px;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .header-nav a:hover {
+      color: #fff;
+      border-color: #4a5568;
+    }
+    .header-nav svg {
+      flex: none;
+    }
+
+    /* ── Editor buttons ── */
+    .edit-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      min-width: 6rem;
+    }
+    .edit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.72rem;
+      font-family: 'DM Mono', monospace;
+      text-decoration: none;
+      padding: 0.22rem 0.6rem;
+      border-radius: 4px;
+      border: 1px solid;
+      transition: opacity 0.15s, filter 0.15s;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+    .edit-btn:hover { opacity: 0.85; filter: brightness(1.15); }
+    .edit-btn.is-id {
+      background: rgba(124, 179, 66, 0.12);
+      border-color: rgba(124, 179, 66, 0.4);
+      color: #9ecf55;
+    }
+    .edit-btn.is-josm {
+      background: rgba(66, 153, 225, 0.12);
+      border-color: rgba(66, 153, 225, 0.4);
+      color: #63b3ed;
+    }
+    .edit-btn.is-level0 {
+      background: rgba(183, 130, 255, 0.12);
+      border-color: rgba(183, 130, 255, 0.4);
+      color: #c084fc;
+    }
+
+    /* ── Plot image ── */
+    .plot-section {
+      margin-bottom: 3rem;
+    }
+    .plot-img-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      padding: 1rem;
+      text-align: center;
+    }
+    .plot-img-wrapper img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+    }
+
     /* ── Empty-state ── */
     .empty-state {
       padding: 2.5rem;
@@ -273,6 +358,7 @@
     @media (max-width: 900px) {
       .table thead th.hide-mobile,
       .table td.hide-mobile { display: none; }
+      .edit-links { min-width: unset; }
     }
   </style>
 </head>
@@ -285,6 +371,47 @@
 {% macro osm_url(osm_type, osm_id) -%}
   https://www.openstreetmap.org/{{ osm_type }}/{{ osm_id }}
 {%- endmacro %}
+
+{# iD editor — uses the long type name (node/way/relation) #}
+{% macro id_url(osm_type, osm_id) -%}
+  https://www.openstreetmap.org/edit?editor=id&{{ osm_type }}={{ osm_id }}
+{%- endmacro %}
+
+{# JOSM remote control — uses single-letter prefix (n/w/r) #}
+{% macro josm_url(osm_type, osm_id) -%}
+  {%- if osm_type == "node" -%}http://localhost:8111/load_object?objects=n{{ osm_id }}
+  {%- elif osm_type == "way" -%}http://localhost:8111/load_object?objects=w{{ osm_id }}
+  {%- else -%}http://localhost:8111/load_object?objects=r{{ osm_id }}
+  {%- endif -%}
+{%- endmacro %}
+
+{# Level0 editor #}
+{% macro level0_url(osm_type, osm_id) -%}
+  https://level0.osmz.ru/?url={{ osm_type }}/{{ osm_id }}
+{%- endmacro %}
+
+{# Renders the three editor buttons for a given osm_type / osm_id #}
+{% macro editor_links(osm_type, osm_id) %}
+  {% if osm_type and osm_id %}
+  <div class="edit-links">
+    <a class="edit-btn is-id"
+       href="{{ id_url(osm_type, osm_id) }}"
+       target="_blank" rel="noopener noreferrer">
+      iD
+    </a>
+    <a class="edit-btn is-josm"
+       href="{{ josm_url(osm_type, osm_id) }}"
+       title="Requires JOSM with remote control enabled">
+      JOSM
+    </a>
+    <a class="edit-btn is-level0"
+       href="{{ level0_url(osm_type, osm_id) }}"
+       target="_blank" rel="noopener noreferrer">
+      Level0
+    </a>
+  </div>
+  {% else %}—{% endif %}
+{% endmacro %}
 
 {% macro conf_badge(confidence) %}
   {% if confidence == "strong" %}
@@ -322,13 +449,33 @@
 ──────────────────────────────────────────────────────────────── #}
 <header class="site-header">
   <div class="container">
-    <p class="site-title">Population<br>Explorer</p>
-    <p class="site-subtitle">OpenStreetMap · place= population tag analysis — {{ country }}</p>
+    <p class="site-title">PopSpot</p>
+    <p class="site-subtitle is-size-3">{{ country }}</p>
+    <p class="site-subtitle">OpenStreetMap · place= population tag analysis</p>
     <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:1.25rem;">
       <span class="stat-pill is-upgrade">▲ Upgrade candidates &middot; {{ upgrade_sorted | length }}</span>
       <span class="stat-pill is-downgrade">▼ Downgrade candidates &middot; {{ downgrade_sorted | length }}</span>
       <span class="stat-pill is-muted">◎ Monitor &middot; {{ monitor_sorted | length }}</span>
       <span class="stat-pill is-muted">Generated {{ generated_at | default("—") }}</span>
+    </div>
+    <div class="header-nav">
+      <a href="../index.html">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Home
+      </a>
+      <a href="https://github.com/whubsch/popspot" target="_blank" rel="noopener noreferrer">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+        </svg>
+        GitHub
+      </a>
     </div>
   </div>
 </header>
@@ -369,7 +516,7 @@
         <th>Own %ile</th>
         <th class="hide-mobile">{{ cross_col_label }}</th>
         <th>Signal</th>
-        <th class="hide-mobile">Notes</th>
+        <th class="hide-mobile">Edit in OSM</th>
         <th>OSM</th>
       </tr>
     </thead>
@@ -399,7 +546,7 @@
           {% endif %}
         </td>
         <td>{{ conf_badge(p.confidence) }}</td>
-        <td class="explanation-cell hide-mobile">{{ p.explanation }}</td>
+        <td class="hide-mobile">{{ editor_links(p.osm_type, p.osm_id) }}</td>
         <td>
           {% if p.osm_type and p.osm_id %}
           <a class="osm-link"
@@ -451,7 +598,7 @@
         <th>Type</th>
         <th>Population</th>
         <th>Own %ile</th>
-        <th class="hide-mobile">Notes</th>
+        <th class="hide-mobile">Edit in OSM</th>
         <th>OSM</th>
       </tr>
     </thead>
@@ -464,7 +611,7 @@
         <td><span class="place-badge">{{ p.place }}</span></td>
         <td><span class="pop-number">{{ "{:,}".format(p.population) }}</span></td>
         <td><span class="pct-number is-notable">{{ p.own_percentile | round(0) | int }}%</span></td>
-        <td class="explanation-cell hide-mobile">{{ p.explanation }}</td>
+        <td class="hide-mobile">{{ editor_links(p.osm_type, p.osm_id) }}</td>
         <td>
           {% if p.osm_type and p.osm_id %}
           <a class="osm-link"
@@ -496,8 +643,26 @@
    Render sections
 ──────────────────────────────────────────────────────────────── #}
 
-{{ candidate_table(upgrade_sorted,   "upgrade",   "% ile among cities",   "upgrade_percentile") }}
-{{ candidate_table(downgrade_sorted, "downgrade", "% ile among villages", "downgrade_percentile") }}
+{# ────────────────────────────────────────────────────────────────
+   Population distribution plot
+──────────────────────────────────────────────────────────────── #}
+<div class="plot-section">
+  <div class="section-title is-muted" style="color: var(--text-muted);">
+    <span class="bar" style="background: var(--text-muted);"></span>
+    Population Distribution
+  </div>
+  <p class="section-desc">
+    Population distribution by place type for {{ country }}.
+    Dashed lines mark type boundaries; dots show individual tagged places.
+  </p>
+  <div class="plot-img-wrapper">
+    <img src="../img/osm_population_plot_{{ country_code }}.png"
+         alt="Population distribution plot for {{ country }}" />
+  </div>
+</div>
+
+{{ candidate_table(upgrade_sorted,   "upgrade",   "%ile among next higher",   "upgrade_percentile") }}
+{{ candidate_table(downgrade_sorted, "downgrade", "%ile among next lower", "downgrade_percentile") }}
 {{ monitor_table(monitor_sorted) }}
 
 </main>
@@ -509,6 +674,9 @@
     Data sourced from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener"
       style="color:inherit;text-decoration:underline;">OpenStreetMap</a>
     via Overpass API. &copy; OpenStreetMap contributors (ODbL).
+    <br><br>
+    <a href="https://github.com/whubsch/popspot" target="_blank" rel="noopener noreferrer"
+      style="color:inherit;text-decoration:underline;">View on GitHub</a>
   </div>
 </footer>
 
