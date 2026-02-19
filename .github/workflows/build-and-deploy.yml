@@ -37,19 +37,13 @@ jobs:
         run: uv sync
 
       - name: Run main.py for all countries
-        run: |
-          cd scripts
-          uv run main.py --all
+        run: uv run scripts/main.py --all
 
       - name: Generate HTML templates
-        run: |
-          cd scripts
-          uv run build_pages.py
+        run: uv run scripts/build_pages.py
 
       - name: Generate home page
-        run: |
-          cd scripts
-          uv run build_home.py
+        run: uv run scripts/build_home.py
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

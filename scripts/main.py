@@ -9,6 +9,7 @@ a hybrid of log-normal distribution likelihood and cross-type percentile ranking
 import argparse
 import json
 import sys
+import time
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -57,8 +58,23 @@ out body;
 def fetch_all_populations(country_code: str) -> PlaceData:
     query = build_query(country_code)
     print(f"Querying Overpass API for {country_code} …")
-    resp = requests.post(OVERPASS_URL, data={"data": query}, timeout=150)
-    resp.raise_for_status()
+
+    max_retries = 6
+    backoff = 60  # seconds to wait on first 429
+    for attempt in range(max_retries):
+        resp = requests.post(OVERPASS_URL, data={"data": query}, timeout=150)
+        if resp.status_code == 429 or resp.status_code >= 500:
+            wait = backoff * 2**attempt
+            print(
+                f"  HTTP {resp.status_code} — retrying in {wait}s (attempt {attempt + 1}/{max_retries}) …"
+            )
+            time.sleep(wait)
+            continue
+        resp.raise_for_status()
+        break
+    else:
+        resp.raise_for_status()
+
     elements = resp.json().get("elements", [])
 
     data: PlaceData = {pt: [] for pt in PLACE_TYPES}
@@ -521,6 +537,7 @@ def main() -> None:
             except Exception as exc:  # noqa: BLE001
                 print(f"  ERROR processing {country.name} ({country.code}): {exc}")
                 failed.append(country.code)
+            time.sleep(5)
 
         print(f"\n{'=' * 60}")
         print(f"Done. Processed {len(countries)} countries.")
