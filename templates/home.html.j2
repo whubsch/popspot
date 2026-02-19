@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PopSpot — Population Data Explorer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --upgrade-accent: #00c897;
+      --downgrade-accent: #ff6b6b;
+      --monitor-accent: #7b8cde;
+      --bg: #0e0f13;
+      --surface: #16181f;
+      --surface-2: #1e2029;
+      --border: #2a2d3a;
+      --text-muted: #6b7280;
+      --text: #e8eaf0;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      padding: 4rem 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% -20%, rgba(0,200,151,0.10), transparent);
+      pointer-events: none;
+    }
+
+    .site-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      letter-spacing: -0.03em;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .site-subtitle {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* ── Stat pills ── */
+    .stat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.85rem;
+      border-radius: 2rem;
+      font-size: 0.78rem;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      border: 1px solid;
+    }
+    .stat-pill.is-muted {
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 0 0.75rem;
+    }
+    .section-title .bar {
+      flex: none;
+      width: 4px;
+      height: 1.2em;
+      border-radius: 2px;
+    }
+    .section-title.is-upgrade { color: var(--upgrade-accent); }
+    .section-title.is-upgrade .bar { background: var(--upgrade-accent); }
+
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    /* ── Countries Grid ── */
+    .countries-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .country-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .country-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--upgrade-accent), transparent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.2s ease;
+    }
+
+    .country-card:hover {
+      border-color: var(--upgrade-accent);
+      background: var(--surface-2);
+      transform: translateY(-2px);
+    }
+
+    .country-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .country-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .country-code {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .country-link-arrow {
+      color: var(--upgrade-accent);
+      font-size: 0.9rem;
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      opacity: 0.7;
+      transition: all 0.2s ease;
+    }
+
+    .country-card:hover .country-link-arrow {
+      opacity: 1;
+      gap: 0.75rem;
+    }
+
+    /* ── Footer ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Main container ── */
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    .content-section {
+      padding: 3rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="main-container">
+      <h1 class="site-title">PopSpot</h1>
+      <p class="site-subtitle">Population Data Explorer — OpenStreetMap Analytics</p>
+      <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <span class="stat-pill is-muted">
+          ◎ {{ total_countries }} Countries
+        </span>
+        <span class="stat-pill is-muted">
+          Updated {{ generated_at }}
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="content-section">
+    <div class="main-container">
+      <div class="section-title is-upgrade">
+        <span class="bar"></span>
+        Available Countries
+      </div>
+      <p class="section-desc">
+        Explore population distribution and analysis for the following countries.
+        Each page includes detailed breakdowns of population centers and OSM data insights.
+      </p>
+
+      <div class="countries-grid">
+        {% for country in countries %}
+          <a href="{{ country.path }}" class="country-card">
+            <div class="country-name">{{ country.name }}</div>
+            <div class="country-code">{{ country.code }}</div>
+            <div class="country-link-arrow">
+              View Analysis →
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="main-container">
+      <p>
+        PopSpot analyzes OpenStreetMap population data and provides detailed geographic insights.
+        Data generated on {{ generated_at }}.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

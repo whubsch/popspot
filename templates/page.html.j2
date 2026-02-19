@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PopSpot — {{ country }}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --upgrade-accent: #00c897;
+      --downgrade-accent: #ff6b6b;
+      --monitor-accent: #7b8cde;
+      --bg: #0e0f13;
+      --surface: #16181f;
+      --surface-2: #1e2029;
+      --border: #2a2d3a;
+      --text-muted: #6b7280;
+      --text: #e8eaf0;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      padding: 4rem 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% -20%, rgba(0,200,151,0.10), transparent);
+      pointer-events: none;
+    }
+
+    .site-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      letter-spacing: -0.03em;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .site-subtitle {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* ── Stat pills ── */
+    .stat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.85rem;
+      border-radius: 2rem;
+      font-size: 0.78rem;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      border: 1px solid;
+    }
+    .stat-pill.is-upgrade {
+      background: rgba(0,200,151,0.1);
+      border-color: rgba(0,200,151,0.35);
+      color: var(--upgrade-accent);
+    }
+    .stat-pill.is-downgrade {
+      background: rgba(255,107,107,0.1);
+      border-color: rgba(255,107,107,0.35);
+      color: var(--downgrade-accent);
+    }
+    .stat-pill.is-muted {
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+
+    /* ── Confidence badges ── */
+    .conf-badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .conf-badge.is-strong {
+      background: rgba(255,160,60,0.15);
+      border: 1px solid rgba(255,160,60,0.4);
+      color: #ffa03c;
+    }
+    .conf-badge.is-weak {
+      background: rgba(255,220,80,0.1);
+      border: 1px solid rgba(255,220,80,0.35);
+      color: #e0c040;
+    }
+    .conf-badge.is-monitor {
+      background: rgba(123,140,222,0.12);
+      border: 1px solid rgba(123,140,222,0.35);
+      color: var(--monitor-accent);
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 0 0.75rem;
+    }
+    .section-title .bar {
+      flex: none;
+      width: 4px;
+      height: 1.2em;
+      border-radius: 2px;
+    }
+    .section-title.is-upgrade { color: var(--upgrade-accent); }
+    .section-title.is-upgrade .bar { background: var(--upgrade-accent); }
+    .section-title.is-downgrade { color: var(--downgrade-accent); }
+    .section-title.is-downgrade .bar { background: var(--downgrade-accent); }
+    .section-title.is-monitor { color: var(--monitor-accent); }
+    .section-title.is-monitor .bar { background: var(--monitor-accent); }
+
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      margin-bottom: 0.85rem;
+      line-height: 1.6;
+    }
+
+    /* ── Tables ── */
+    .table-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 3rem;
+    }
+
+    .table {
+      background: transparent;
+      color: var(--text);
+      width: 100%;
+      margin: 0;
+    }
+
+    .table thead th {
+      background: var(--surface-2);
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border) !important;
+      border-color: transparent !important;
+      padding: 0.85rem 1.1rem;
+      font-weight: 500;
+    }
+
+    .table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .table tbody tr:last-child { border-bottom: none; }
+    .table tbody tr:hover { background: var(--surface-2); }
+
+    .table td {
+      border-color: transparent !important;
+      padding: 0.85rem 1.1rem;
+      vertical-align: middle;
+      color: var(--text);
+    }
+
+    /* ── Cell styles ── */
+    .place-badge {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 500;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .city-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #fff;
+    }
+
+    .pop-number {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+    }
+
+    .pct-number {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .pct-number.is-notable { color: var(--text); }
+
+    .rank-cell {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      width: 2.5rem;
+    }
+
+    /* ── Explanation tooltip-style cell ── */
+    .explanation-cell {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      max-width: 340px;
+    }
+
+    /* ── OSM link ── */
+    .osm-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 0.25rem 0.65rem;
+      border-radius: 5px;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .osm-link:hover { color: #fff; border-color: #4a5568; }
+    .osm-link svg { flex: none; }
+
+    /* ── Empty-state ── */
+    .empty-state {
+      padding: 2.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ── Footer ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .table thead th.hide-mobile,
+      .table td.hide-mobile { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+{# ────────────────────────────────────────────────────────────────
+   Macros
+──────────────────────────────────────────────────────────────── #}
+
+{% macro osm_url(osm_type, osm_id) -%}
+  https://www.openstreetmap.org/{{ osm_type }}/{{ osm_id }}
+{%- endmacro %}
+
+{% macro conf_badge(confidence) %}
+  {% if confidence == "strong" %}
+    <span class="conf-badge is-strong">Strong</span>
+  {% elif confidence == "weak" %}
+    <span class="conf-badge is-weak">Weak</span>
+  {% elif confidence == "monitor" %}
+    <span class="conf-badge is-monitor">Monitor</span>
+  {% endif %}
+{% endmacro %}
+
+{# ────────────────────────────────────────────────────────────────
+   Data segmentation
+──────────────────────────────────────────────────────────────── #}
+
+{% set upgrade_features   = features | selectattr("properties.flag", "equalto", "upgrade")   | list %}
+{% set downgrade_features = features | selectattr("properties.flag", "equalto", "downgrade") | list %}
+{% set monitor_features   = features | selectattr("properties.confidence", "equalto", "monitor") | list %}
+
+{# Sort upgrade: strong first, then by own_percentile desc #}
+{% set upgrade_strong = upgrade_features | selectattr("properties.confidence", "equalto", "strong") | sort(attribute="properties.own_percentile", reverse=true) | list %}
+{% set upgrade_weak   = upgrade_features | selectattr("properties.confidence", "equalto", "weak")   | sort(attribute="properties.own_percentile", reverse=true) | list %}
+{% set upgrade_sorted = upgrade_strong + upgrade_weak %}
+
+{# Sort downgrade: strong first, then by own_percentile asc #}
+{% set downgrade_strong = downgrade_features | selectattr("properties.confidence", "equalto", "strong") | sort(attribute="properties.own_percentile") | list %}
+{% set downgrade_weak   = downgrade_features | selectattr("properties.confidence", "equalto", "weak")   | sort(attribute="properties.own_percentile") | list %}
+{% set downgrade_sorted = downgrade_strong + downgrade_weak %}
+
+{# Monitor: sort by own_percentile desc (high end is more interesting) #}
+{% set monitor_sorted = monitor_features | sort(attribute="properties.own_percentile", reverse=true) | list %}
+
+{# ────────────────────────────────────────────────────────────────
+   Header
+──────────────────────────────────────────────────────────────── #}
+<header class="site-header">
+  <div class="container">
+    <p class="site-title">Population<br>Explorer</p>
+    <p class="site-subtitle">OpenStreetMap · place= population tag analysis — {{ country }}</p>
+    <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:1.25rem;">
+      <span class="stat-pill is-upgrade">▲ Upgrade candidates &middot; {{ upgrade_sorted | length }}</span>
+      <span class="stat-pill is-downgrade">▼ Downgrade candidates &middot; {{ downgrade_sorted | length }}</span>
+      <span class="stat-pill is-muted">◎ Monitor &middot; {{ monitor_sorted | length }}</span>
+      <span class="stat-pill is-muted">Generated {{ generated_at | default("—") }}</span>
+    </div>
+  </div>
+</header>
+
+<main class="container" style="padding: 2.5rem 1.5rem;">
+
+{# ────────────────────────────────────────────────────────────────
+   Macro: candidate table
+   direction = "upgrade" | "downgrade"
+   cross_col_label = label for the percentile-in-adjacent-type column
+   cross_attr      = "upgrade_percentile" | "downgrade_percentile"
+──────────────────────────────────────────────────────────────── #}
+{% macro candidate_table(rows, direction, cross_col_label, cross_attr) %}
+{% set is_up = direction == "upgrade" %}
+<div class="section-title {{ 'is-upgrade' if is_up else 'is-downgrade' }}">
+  <span class="bar"></span>
+  {{ "Upgrade Candidates" if is_up else "Downgrade Candidates" }}
+</div>
+<p class="section-desc">
+  {% if is_up %}
+    Places whose population is more consistent with the next-higher type's distribution than their own.
+    Ranked by signal strength, then percentile within current type.
+  {% else %}
+    Places whose population is more consistent with the next-lower type's distribution than their own.
+    Ranked by signal strength, then percentile within current type.
+  {% endif %}
+</p>
+
+<div class="table-wrapper">
+  {% if rows %}
+  <table class="table is-fullwidth">
+    <thead>
+      <tr>
+        <th style="width:2.5rem;">#</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Population</th>
+        <th>Own %ile</th>
+        <th class="hide-mobile">{{ cross_col_label }}</th>
+        <th>Signal</th>
+        <th class="hide-mobile">Notes</th>
+        <th>OSM</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in rows %}
+      {% set p = f.properties %}
+      <tr>
+        <td class="rank-cell">{{ loop.index }}</td>
+        <td><span class="city-name">{{ p.name if p.name else "—" }}</span></td>
+        <td><span class="place-badge">{{ p.place }}</span></td>
+        <td>
+          <span class="pop-number">{{ "{:,}".format(p.population) }}</span>
+        </td>
+        <td>
+          <span class="pct-number {{ 'is-notable' if (is_up and p.own_percentile >= 75) or (not is_up and p.own_percentile <= 25) else '' }}">
+            {{ p.own_percentile | round(0) | int }}%
+          </span>
+        </td>
+        <td class="hide-mobile">
+          {% set cross_val = p[cross_attr] %}
+          {% if cross_val is not none %}
+          <span class="pct-number {{ 'is-notable' if 20 <= cross_val <= 65 else '' }}">
+            {{ cross_val | round(0) | int }}%
+          </span>
+          {% else %}
+          <span class="pct-number">—</span>
+          {% endif %}
+        </td>
+        <td>{{ conf_badge(p.confidence) }}</td>
+        <td class="explanation-cell hide-mobile">{{ p.explanation }}</td>
+        <td>
+          {% if p.osm_type and p.osm_id %}
+          <a class="osm-link"
+             href="{{ osm_url(p.osm_type, p.osm_id) }}"
+             target="_blank"
+             rel="noopener noreferrer">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            {{ p.osm_type }}/{{ p.osm_id }}
+          </a>
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">No {{ direction }} candidates found in this dataset.</div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{# ────────────────────────────────────────────────────────────────
+   Macro: monitor table
+──────────────────────────────────────────────────────────────── #}
+{% macro monitor_table(rows) %}
+<div class="section-title is-monitor">
+  <span class="bar"></span>
+  Monitor
+</div>
+<p class="section-desc">
+  Places that are consistent with their current type's distribution but sit at an extreme
+  percentile within it. No reclassification signal yet, but worth revisiting as more
+  population data is tagged.
+</p>
+
+<div class="table-wrapper">
+  {% if rows %}
+  <table class="table is-fullwidth">
+    <thead>
+      <tr>
+        <th style="width:2.5rem;">#</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Population</th>
+        <th>Own %ile</th>
+        <th class="hide-mobile">Notes</th>
+        <th>OSM</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in rows %}
+      {% set p = f.properties %}
+      <tr>
+        <td class="rank-cell">{{ loop.index }}</td>
+        <td><span class="city-name">{{ p.name if p.name else "—" }}</span></td>
+        <td><span class="place-badge">{{ p.place }}</span></td>
+        <td><span class="pop-number">{{ "{:,}".format(p.population) }}</span></td>
+        <td><span class="pct-number is-notable">{{ p.own_percentile | round(0) | int }}%</span></td>
+        <td class="explanation-cell hide-mobile">{{ p.explanation }}</td>
+        <td>
+          {% if p.osm_type and p.osm_id %}
+          <a class="osm-link"
+             href="{{ osm_url(p.osm_type, p.osm_id) }}"
+             target="_blank"
+             rel="noopener noreferrer">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            {{ p.osm_type }}/{{ p.osm_id }}
+          </a>
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">No places in the monitor tier.</div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{# ────────────────────────────────────────────────────────────────
+   Render sections
+──────────────────────────────────────────────────────────────── #}
+
+{{ candidate_table(upgrade_sorted,   "upgrade",   "% ile among cities",   "upgrade_percentile") }}
+{{ candidate_table(downgrade_sorted, "downgrade", "% ile among villages", "downgrade_percentile") }}
+{{ monitor_table(monitor_sorted) }}
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    Statistical flags are prompts for investigation, not conclusions. Place hierarchy in OSM reflects
+    infrastructure, administrative status, and regional importance — population alone cannot capture that.
+    Data sourced from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener"
+      style="color:inherit;text-decoration:underline;">OpenStreetMap</a>
+    via Overpass API. &copy; OpenStreetMap contributors (ODbL).
+  </div>
+</footer>
+
+</body>
+</html>
