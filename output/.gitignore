@@ -1,0 +1,8 @@
+# Ignore all generated files
+*.geojson
+*.html
+*.json
+*.png
+
+# But keep the directory structure
+!.gitignore
