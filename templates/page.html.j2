@@ -9,6 +9,27 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
+    /**
+     * Bulma Responsive & Visibility Helpers
+     * ──────────────────────────────────────
+     * Display helpers: is-flex, is-block, is-inline, is-inline-block, is-inline-flex
+     *
+     * Breakpoints (Bulma standard):
+     * - Mobile: up to 768px
+     * - Tablet: 769px to 1023px
+     * - Desktop: 1024px to 1215px
+     * - Widescreen: 1216px to 1407px
+     * - FullHD: 1408px and above
+     *
+     * Usage examples:
+     * - is-hidden-mobile: Hide on mobile only
+     * - is-hidden-tablet: Hide on tablet and larger
+     * - is-hidden-touch: Hide on mobile and tablet (up to 1023px)
+     * - is-flex-mobile: Display as flex on mobile
+     * - is-invisible: visibility: hidden (takes up space)
+     * - is-hidden: display: none (removes from layout)
+     * - is-sr-only: Screen reader only (hidden visually)
+     */
     :root {
       --upgrade-accent: #00c897;
       --downgrade-accent: #ff6b6b;
@@ -152,7 +173,6 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      overflow: hidden;
       margin-bottom: 3rem;
     }
 
@@ -354,11 +374,145 @@
       letter-spacing: 0.04em;
     }
 
-    /* ── Responsive ── */
+    /* ── Responsive Classes (Bulma-style breakpoints) ── */
+    /* Mobile: up to 768px */
+    @media screen and (max-width: 768px) {
+      .is-hidden-mobile { display: none !important; }
+      .is-flex-mobile { display: flex !important; }
+      .is-block-mobile { display: block !important; }
+      .is-inline-mobile { display: inline !important; }
+      .is-inline-flex-mobile { display: inline-flex !important; }
+
+      .site-header {
+        padding: 2rem 1rem 1.5rem;
+      }
+
+      .site-title {
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+      }
+
+      .main-container {
+        padding: 0 1rem;
+      }
+
+      .header-nav {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .header-nav a {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .stat-pill {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.7rem;
+      }
+
+      .section-title {
+        font-size: 0.95rem;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .table {
+        min-width: 600px;
+      }
+
+      .table td,
+      .table th {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.7rem;
+      }
+
+      .explanation-cell {
+        max-width: 200px;
+        font-size: 0.7rem;
+      }
+
+      .edit-links {
+        flex-direction: row;
+        min-width: unset;
+        gap: 0.25rem;
+      }
+
+      .edit-btn {
+        padding: 0.15rem 0.4rem;
+        font-size: 0.65rem;
+      }
+    }
+
+    /* Tablet: 769px to 1023px */
+    @media screen and (min-width: 769px) and (max-width: 1023px) {
+      .is-hidden-tablet-only { display: none !important; }
+      .is-flex-tablet { display: flex !important; }
+      .is-block-tablet { display: block !important; }
+
+      .site-title {
+        font-size: clamp(2rem, 4vw, 2.8rem);
+      }
+
+      .table td,
+      .table th {
+        padding: 0.75rem 1rem;
+        font-size: 0.75rem;
+      }
+
+      .explanation-cell {
+        max-width: 280px;
+      }
+    }
+
+    /* Desktop: 1024px to 1215px */
+    @media screen and (min-width: 1024px) and (max-width: 1215px) {
+      .is-hidden-desktop-only { display: none !important; }
+      .is-flex-desktop { display: flex !important; }
+      .is-block-desktop { display: block !important; }
+    }
+
+    /* Widescreen: 1216px to 1407px */
+    @media screen and (min-width: 1216px) and (max-width: 1407px) {
+      .is-hidden-widescreen { display: none !important; }
+      .is-flex-widescreen { display: flex !important; }
+      .is-block-widescreen { display: block !important; }
+    }
+
+    /* FullHD: 1408px and above */
+    @media screen and (min-width: 1408px) {
+      .is-hidden-fullhd { display: none !important; }
+      .is-flex-fullhd { display: flex !important; }
+      .is-block-fullhd { display: block !important; }
+    }
+
+    /* Touch devices (mobile + tablet) */
+    @media screen and (max-width: 1023px) {
+      .is-hidden-touch { display: none !important; }
+      .is-flex-touch { display: flex !important; }
+    }
+
+    /* Visibility helpers */
+    .is-invisible { visibility: hidden !important; }
+    .is-hidden { display: none !important; }
+    .is-sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    /* Responsive ── */
     @media (max-width: 900px) {
-      .table thead th.hide-mobile,
-      .table td.hide-mobile { display: none; }
-      .edit-links { min-width: unset; }
+      .table thead th.is-hidden-tablet,
+      .table td.is-hidden-tablet { display: none; }
     }
   </style>
 </head>
@@ -399,7 +553,7 @@
        target="_blank" rel="noopener noreferrer">
       iD
     </a>
-    <a class="edit-btn is-josm"
+    <a class="edit-btn is-josm is-hidden-mobile"
        href="{{ josm_url(osm_type, osm_id) }}"
        title="Requires JOSM with remote control enabled">
       JOSM
@@ -453,12 +607,12 @@
     <p class="site-subtitle is-size-3">{{ country }}</p>
     <p class="site-subtitle">OpenStreetMap · place= population tag analysis</p>
     <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:1.25rem;">
-      <span class="stat-pill is-upgrade">▲ Upgrade candidates &middot; {{ upgrade_sorted | length }}</span>
-      <span class="stat-pill is-downgrade">▼ Downgrade candidates &middot; {{ downgrade_sorted | length }}</span>
-      <span class="stat-pill is-muted">◎ Monitor &middot; {{ monitor_sorted | length }}</span>
-      <span class="stat-pill is-muted">Generated {{ generated_at | default("—") }}</span>
+      <span class="stat-pill is-upgrade is-flex-mobile is-flex-tablet is-flex-desktop">▲ Upgrade candidates &middot; {{ upgrade_sorted | length }}</span>
+      <span class="stat-pill is-downgrade is-flex-mobile is-flex-tablet is-flex-desktop">▼ Downgrade candidates &middot; {{ downgrade_sorted | length }}</span>
+      <span class="stat-pill is-muted is-hidden-mobile">◎ Monitor &middot; {{ monitor_sorted | length }}</span>
+      <span class="stat-pill is-muted is-hidden-mobile">Generated {{ generated_at | default("—") }}</span>
     </div>
-    <div class="header-nav">
+    <div class="header-nav is-flex-mobile is-flex-tablet is-flex-desktop">
       <a href="../index.html">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2.2"
@@ -504,7 +658,7 @@
   {% endif %}
 </p>
 
-<div class="table-wrapper">
+<div class="table-wrapper table-container">
   {% if rows %}
   <table class="table is-fullwidth">
     <thead>
@@ -514,9 +668,9 @@
         <th>Type</th>
         <th>Population</th>
         <th>Own %ile</th>
-        <th class="hide-mobile">{{ cross_col_label }}</th>
+        <th class="is-hidden-tablet">{{ cross_col_label }}</th>
         <th>Signal</th>
-        <th class="hide-mobile">Edit in OSM</th>
+        <th>Edit</th>
         <th>OSM</th>
       </tr>
     </thead>
@@ -535,7 +689,7 @@
             {{ p.own_percentile | round(0) | int }}%
           </span>
         </td>
-        <td class="hide-mobile">
+        <td class="is-hidden-tablet">
           {% set cross_val = p[cross_attr] %}
           {% if cross_val is not none %}
           <span class="pct-number {{ 'is-notable' if 20 <= cross_val <= 65 else '' }}">
@@ -546,7 +700,7 @@
           {% endif %}
         </td>
         <td>{{ conf_badge(p.confidence) }}</td>
-        <td class="hide-mobile">{{ editor_links(p.osm_type, p.osm_id) }}</td>
+        <td>{{ editor_links(p.osm_type, p.osm_id) }}</td>
         <td>
           {% if p.osm_type and p.osm_id %}
           <a class="osm-link"
@@ -588,7 +742,7 @@
   population data is tagged.
 </p>
 
-<div class="table-wrapper">
+<div class="table-wrapper table-container">
   {% if rows %}
   <table class="table is-fullwidth">
     <thead>
@@ -598,7 +752,7 @@
         <th>Type</th>
         <th>Population</th>
         <th>Own %ile</th>
-        <th class="hide-mobile">Edit in OSM</th>
+        <th>Edit</th>
         <th>OSM</th>
       </tr>
     </thead>
@@ -611,7 +765,7 @@
         <td><span class="place-badge">{{ p.place }}</span></td>
         <td><span class="pop-number">{{ "{:,}".format(p.population) }}</span></td>
         <td><span class="pct-number is-notable">{{ p.own_percentile | round(0) | int }}%</span></td>
-        <td class="hide-mobile">{{ editor_links(p.osm_type, p.osm_id) }}</td>
+        <td>{{ editor_links(p.osm_type, p.osm_id) }}</td>
         <td>
           {% if p.osm_type and p.osm_id %}
           <a class="osm-link"

@@ -4,10 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PopSpot — Population Data Explorer</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
+    /**
+     * Bulma Responsive & Visibility Helpers
+     * ──────────────────────────────────────
+     * Display helpers: is-flex, is-block, is-inline, is-inline-block, is-inline-flex
+     *
+     * Breakpoints (Bulma standard):
+     * - Mobile: up to 768px
+     * - Tablet: 769px to 1023px
+     * - Desktop: 1024px to 1215px
+     * - Widescreen: 1216px to 1407px
+     * - FullHD: 1408px and above
+     *
+     * Usage examples:
+     * - is-hidden-mobile: Hide on mobile only
+     * - is-hidden-tablet: Hide on tablet and larger
+     * - is-hidden-touch: Hide on mobile and tablet (up to 1023px)
+     * - is-flex-mobile: Display as flex on mobile
+     * - is-invisible: visibility: hidden (takes up space)
+     * - is-hidden: display: none (removes from layout)
+     * - is-sr-only: Screen reader only (hidden visually)
+     */
     :root {
       --upgrade-accent: #00c897;
       --downgrade-accent: #ff6b6b;
@@ -113,6 +135,46 @@
       margin-bottom: 3rem;
     }
 
+    /* ── Responsive adjustments ── */
+    @media screen and (max-width: 768px) {
+      .countries-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .site-header {
+        padding: 2rem 1rem 1.5rem;
+      }
+
+      .site-title {
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+      }
+
+      .main-container {
+        padding: 0 1rem;
+      }
+
+      .stat-pill {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.7rem;
+      }
+
+      .section-title {
+        font-size: 0.95rem;
+      }
+    }
+
+    @media screen and (min-width: 769px) and (max-width: 1023px) {
+      .countries-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+      }
+
+      .site-title {
+        font-size: clamp(2rem, 4vw, 2.8rem);
+      }
+    }
+
     .country-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -210,7 +272,7 @@
       <h1 class="site-title">PopSpot</h1>
       <p class="site-subtitle">Population Data Explorer — OpenStreetMap Analytics</p>
       <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-        <span class="stat-pill is-muted">
+        <span class="stat-pill is-muted is-hidden-mobile">
           ◎ {{ total_countries }} Countries
         </span>
         <span class="stat-pill is-muted">
