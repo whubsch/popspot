@@ -61,7 +61,7 @@ def fetch_all_populations(country_code: str) -> PlaceData:
     print(f"Querying Overpass API for {country_code} …")
 
     max_retries = 6
-    backoff = 60  # seconds to wait on first 429
+    backoff = 6  # seconds to wait on first 429
     for attempt in range(max_retries):
         resp = requests.post(OVERPASS_URL, data={"data": query}, timeout=150)
         if resp.status_code == 429 or resp.status_code >= 500:
