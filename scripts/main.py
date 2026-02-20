@@ -49,7 +49,7 @@ area["ISO3166-1"="{country_code}"][admin_level=2];
 (
   node(area)[population]["place"~"^(city|town|village)$"];
 );
-out body;
+out tags;
 """
 
 
