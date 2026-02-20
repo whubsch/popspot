@@ -113,7 +113,7 @@ countries = [
         code="BT",
     ),
     Country(
-        name="Bolivia, Plurinational State of",
+        name="Bolivia",
         code="BO",
     ),
     Country(
@@ -141,7 +141,7 @@ countries = [
         code="IO",
     ),
     Country(
-        name="Brunei Darussalam",
+        name="Brunei",
         code="BN",
     ),
     Country(
@@ -213,7 +213,7 @@ countries = [
         code="CG",
     ),
     Country(
-        name="Congo, Democratic Republic of the",
+        name="Democratic Republic of the Congo",
         code="CD",
     ),
     Country(
@@ -429,7 +429,7 @@ countries = [
         code="ID",
     ),
     Country(
-        name="Iran, Islamic Republic of",
+        name="Iran",
         code="IR",
     ),
     Country(
@@ -481,11 +481,11 @@ countries = [
         code="KI",
     ),
     Country(
-        name="Korea, Democratic People's Republic of",
+        name="North Korea",
         code="KP",
     ),
     Country(
-        name="Korea, Republic of",
+        name="South Korea",
         code="KR",
     ),
     Country(
@@ -585,11 +585,11 @@ countries = [
         code="MX",
     ),
     Country(
-        name="Micronesia, Federated States of",
+        name="Micronesia",
         code="FM",
     ),
     Country(
-        name="Moldova, Republic of",
+        name="Moldova",
         code="MD",
     ),
     Country(
@@ -633,7 +633,7 @@ countries = [
         code="NP",
     ),
     Country(
-        name="Netherlands, Kingdom of the",
+        name="Netherlands",
         code="NL",
     ),
     Country(
@@ -689,7 +689,7 @@ countries = [
         code="PW",
     ),
     Country(
-        name="Palestine, State of",
+        name="Palestine",
         code="PS",
     ),
     Country(
@@ -873,11 +873,11 @@ countries = [
         code="CH",
     ),
     Country(
-        name="Syrian Arab Republic",
+        name="Syria",
         code="SY",
     ),
     Country(
-        name="Taiwan, Province of China",
+        name="Taiwan",
         code="TW",
     ),
     Country(
@@ -885,7 +885,7 @@ countries = [
         code="TJ",
     ),
     Country(
-        name="Tanzania, United Republic of",
+        name="Tanzania",
         code="TZ",
     ),
     Country(
@@ -969,7 +969,7 @@ countries = [
         code="VU",
     ),
     Country(
-        name="Venezuela, Bolivarian Republic of",
+        name="Venezuela",
         code="VE",
     ),
     Country(

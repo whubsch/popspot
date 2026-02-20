@@ -47,7 +47,7 @@ def build_query(country_code: str) -> str:
 [out:json][timeout:120];
 area["ISO3166-1"="{country_code}"][admin_level=2];
 (
-  node(area)["place"~"^(city|town|village)$"][population];
+  node(area)[population]["place"~"^(city|town|village)$"];
 );
 out body;
 """
@@ -93,6 +93,8 @@ def fetch_all_populations(country_code: str) -> PlaceData:
         wikidata = tags.get("wikidata")
         try:
             pop = int(raw.replace(",", "").replace(" ", "").split(".")[0])
+            if pop <= 0:
+                continue
             data[place_type].append(
                 {
                     "name": name,
