@@ -109,6 +109,29 @@
       color: var(--text-muted);
     }
 
+    /* ── Stat pill links ── */
+    a.stat-pill {
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    a.stat-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    a.stat-pill.is-upgrade:hover {
+      background: rgba(0,200,151,0.15);
+      border-color: rgba(0,200,151,0.5);
+    }
+    a.stat-pill.is-downgrade:hover {
+      background: rgba(255,107,107,0.15);
+      border-color: rgba(255,107,107,0.5);
+    }
+    a.stat-pill.is-muted:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+
     /* ── Confidence badges ── */
     .conf-badge {
       display: inline-block;
@@ -738,9 +761,9 @@
     <p class="site-subtitle is-size-3">{{ country }}</p>
     <p class="site-subtitle">OpenStreetMap · place= population tag analysis</p>
     <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:1.25rem;">
-      <span class="stat-pill is-upgrade is-flex-mobile is-flex-tablet is-flex-desktop">▲ Upgrade candidates &middot; {{ upgrade_sorted | length }}</span>
-      <span class="stat-pill is-downgrade is-flex-mobile is-flex-tablet is-flex-desktop">▼ Downgrade candidates &middot; {{ downgrade_sorted | length }}</span>
-      <span class="stat-pill is-muted is-hidden-mobile">◎ Monitor &middot; {{ monitor_sorted | length }}</span>
+      <a href="#upgrade-section" class="stat-pill is-upgrade is-flex-mobile is-flex-tablet is-flex-desktop">▲ Upgrade candidates &middot; {{ upgrade_sorted | length }}</a>
+      <a href="#downgrade-section" class="stat-pill is-downgrade is-flex-mobile is-flex-tablet is-flex-desktop">▼ Downgrade candidates &middot; {{ downgrade_sorted | length }}</a>
+      <a href="#monitor-section" class="stat-pill is-muted is-hidden-mobile">◎ Monitor &middot; {{ monitor_sorted | length }}</a>
       <span class="stat-pill is-muted is-hidden-mobile">Generated &middot; {{ generated_at | default("—") }}</span>
     </div>
     <div class="header-nav is-flex-mobile is-flex-tablet is-flex-desktop">
@@ -785,7 +808,7 @@
 ──────────────────────────────────────────────────────────────── #}
 {% macro candidate_table(rows, direction, cross_col_label, cross_attr) %}
 {% set is_up = direction == "upgrade" %}
-<div class="section-title {{ 'is-upgrade' if is_up else 'is-downgrade' }}">
+<div class="section-title {{ 'is-upgrade' if is_up else 'is-downgrade' }}" id="{{ 'upgrade-section' if is_up else 'downgrade-section' }}">
   <span class="bar"></span>
   {{ "Upgrade Candidates" if is_up else "Downgrade Candidates" }}
 </div>
@@ -873,7 +896,7 @@
    Macro: monitor table
 ──────────────────────────────────────────────────────────────── #}
 {% macro monitor_table(rows) %}
-<div class="section-title is-monitor">
+<div class="section-title is-monitor" id="monitor-section">
   <span class="bar"></span>
   Monitor
 </div>
@@ -948,7 +971,7 @@
   </div>
   <p class="section-desc">
     Population distribution by place type for {{ country }}.
-    Dashed lines mark type boundaries; dots show individual tagged places.
+    Dots show individual tagged places, with the maximum, minimum, and median population values highlighted.
   </p>
   <div class="plot-img-wrapper">
     <img src="../img/osm_population_plot_{{ country_code }}.png"
