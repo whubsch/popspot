@@ -45,9 +45,9 @@ COUNTRIES_BY_CODE: dict[str, Country] = {c.code: c for c in countries}
 def build_query(country_code: str) -> str:
     return f"""
 [out:json][timeout:120];
-area["ISO3166-1"="{country_code}"][admin_level=2];
+area["ISO3166-1"="{country_code}"][admin_level=2]->.searchCountry;
 (
-  node(area)[population]["place"~"^(city|town|village)$"];
+  {"\n".join([f"node(area.searchCountry)[population][place={place_type}];" for place_type in TYPE_ORDER])}
 );
 out tags;
 """
@@ -321,8 +321,6 @@ def write_geojson(data: PlaceData, country_code: str) -> None:
 
     for place_type, records in data.items():
         for r in records:
-            if r.get("lat") is None or r.get("lon") is None:
-                continue
             features.append(
                 {
                     "type": "Feature",
@@ -339,7 +337,6 @@ def write_geojson(data: PlaceData, country_code: str) -> None:
                         "downgrade_percentile": r.get("downgrade_percentile"),
                         "flag": r.get("flag", "consistent"),
                         "confidence": r.get("confidence", "consistent"),
-                        "explanation": r.get("explanation", ""),
                         "osm_type": r.get("osm_type"),
                         "osm_id": r.get("osm_id"),
                         "wikidata": r.get("wikidata"),
