@@ -1,7 +1,8 @@
 """
 OSM Population Distribution Plot
-Fetches city, town, and village nodes from Overpass API in a single
-request and plots their population distributions as a strip/jitter chart.
+Fetches city, town, and village nodes from QLever (SPARQL over OSM Planet) in
+two requests — one to resolve the country's OSM relation ID and one to retrieve
+place nodes — then plots their population distributions as a strip/jitter chart.
 Also writes a GeoJSON file with per-feature misclassification analysis using
 a hybrid of log-normal distribution likelihood and cross-type percentile ranking.
 """
@@ -21,7 +22,7 @@ from countries import Country, countries
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+QLEVER_URL = "https://qlever.dev/api/osm-planet"
 PLACE_TYPES = ["city", "town", "village"]
 
 COLORS = {
@@ -40,59 +41,133 @@ COUNTRIES_BY_CODE: dict[str, Country] = {c.code: c for c in countries}
 
 
 # ---------------------------------------------------------------------------
-# Query builder
+# Query builders
 # ---------------------------------------------------------------------------
-def build_query(country_code: str) -> str:
-    return f"""
-[out:json][timeout:120];
-area["ISO3166-1"="{country_code}"][admin_level=2]->.searchCountry;
-(
-  {"\n".join([f"node(area.searchCountry)[population][place={place_type}];" for place_type in TYPE_ORDER])}
-);
-out tags;
+def build_relation_query(country_code: str) -> str:
+    """Return a SPARQL query that resolves an ISO 3166-1 alpha-2 code to an OSM relation URI."""
+    return f"""\
+PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>
+
+SELECT ?country WHERE {{
+  ?country osmkey:ISO3166-1 "{country_code}" ;
+           osmkey:admin_level "2" .
+}}
+"""
+
+
+def build_places_query(relation_id: int) -> str:
+    """Return a SPARQL query that fetches city/town/village nodes inside a relation."""
+    place_values = " ".join(f'"{pt}"' for pt in TYPE_ORDER)
+    return f"""\
+PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>
+PREFIX osmrel: <https://www.openstreetmap.org/relation/>
+PREFIX ogc: <http://www.opengis.net/rdf#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+
+SELECT ?node ?name ?population ?place ?centroid ?wikidata WHERE {{
+  osmrel:{relation_id} ogc:sfIntersects ?node .
+
+  VALUES ?place {{ {place_values} }}
+
+  ?node osmkey:place ?place ;
+        osmkey:population ?population ;
+        osmkey:name ?name ;
+        geo:hasGeometry/geo:asWKT ?geometry .
+
+  BIND(geof:centroid(?geometry) AS ?centroid)
+
+  OPTIONAL {{ ?node osmkey:wikidata ?wikidata }}
+}}
 """
 
 
 # ---------------------------------------------------------------------------
 # Fetch data
 # ---------------------------------------------------------------------------
-def fetch_all_populations(country_code: str) -> PlaceData:
-    query = build_query(country_code)
-    print(f"Querying Overpass API for {country_code} …")
-
+def _sparql_request(query: str, *, label: str = "QLever") -> list[dict]:
+    """POST a SPARQL query to QLever and return the list of result bindings."""
     max_retries = 6
-    backoff = 6  # seconds to wait on first 429
+    print(f"Querying {label} for {query}")
+    backoff = 6
+    resp = None
     for attempt in range(max_retries):
-        resp = requests.post(OVERPASS_URL, data={"data": query}, timeout=150)
+        resp = requests.post(
+            QLEVER_URL,
+            data={"query": query},
+            headers={"Accept": "application/sparql-results+json"},
+            timeout=150,
+        )
         if resp.status_code == 429 or resp.status_code >= 500:
             wait = backoff * 2**attempt
             print(
-                f"  HTTP {resp.status_code} — retrying in {wait}s (attempt {attempt + 1}/{max_retries}) …"
+                f"  HTTP {resp.status_code} from {label} — retrying in {wait}s "
+                f"(attempt {attempt + 1}/{max_retries}) …"
             )
             time.sleep(wait)
             continue
         resp.raise_for_status()
-        break
-    else:
+        return resp.json().get("results", {}).get("bindings", [])
+    if resp is not None:
         resp.raise_for_status()
+    return []
 
-    elements = resp.json().get("elements", [])
+
+def _parse_wkt_point(wkt: str) -> tuple[float, float] | None:
+    """Parse a WKT POINT literal and return (lat, lon), or None on failure."""
+    # Expected format: "POINT(lon lat)" or "POINT (lon lat)"
+    wkt = wkt.strip()
+    if not wkt.upper().startswith("POINT"):
+        return None
+    try:
+        inner = wkt[wkt.index("(") + 1 : wkt.index(")")]
+        lon_s, lat_s = inner.split()
+        return float(lat_s), float(lon_s)
+    except (ValueError, IndexError):
+        return None
+
+
+def _parse_osm_uri(uri: str) -> tuple[str, int] | tuple[None, None]:
+    """Return (osm_type, osm_id) from a URI like https://www.openstreetmap.org/node/12345."""
+    for segment in ("node", "way", "relation"):
+        marker = f"openstreetmap.org/{segment}/"
+        if marker in uri:
+            try:
+                return segment, int(uri.split(marker)[-1])
+            except ValueError:
+                pass
+    return None, None
+
+
+def fetch_all_populations(country: Country) -> PlaceData:
+    print(f"Querying QLever for places in relation/{country.osm_id} …")
+    bindings = _sparql_request(
+        build_places_query(country.osm_id), label="QLever (places)"
+    )
 
     data: PlaceData = {pt: [] for pt in PLACE_TYPES}
-    for el in elements:
-        tags = el.get("tags", {})
-        place_type = tags.get("place", "")
+    for row in bindings:
+
+        def val(key: str) -> str:
+            return row[key]["value"] if key in row else ""
+
+        place_type = val("place")
         if place_type not in data:
             continue
-        raw = tags.get("population", "")
-        name = tags.get("name", "")
-        lat = el.get("lat")
-        lon = el.get("lon")
-        osm_type = el.get("type")
-        osm_id = el.get("id")
-        wikidata = tags.get("wikidata")
+
+        raw_pop = val("population")
+        name = val("name")
+        wikidata = val("wikidata") or None
+
+        centroid_wkt = val("centroid")
+        coords = _parse_wkt_point(centroid_wkt)
+        lat, lon = coords if coords else (None, None)
+
+        node_uri = val("node")
+        osm_type, osm_id = _parse_osm_uri(node_uri)
+
         try:
-            pop = int(raw.replace(",", "").replace(" ", "").split(".")[0])
+            pop = int(raw_pop.replace(",", "").replace(" ", "").split(".")[0])
             if pop <= 0:
                 continue
             data[place_type].append(
@@ -524,7 +599,7 @@ def run_for_country(country: Country, *, show_plot: bool = False) -> None:
     print(f"  {country.name} ({country.code})")
     print(f"{'=' * 60}")
 
-    data = fetch_all_populations(country.code)
+    data = fetch_all_populations(country)
 
     total = sum(len(v) for v in data.values())
     if total == 0:

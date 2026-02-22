@@ -5,1003 +5,1028 @@ from dataclasses import dataclass
 class Country:
     name: str
     code: str
+    osm_id: int
 
 
 countries = [
     Country(
         name="Afghanistan",
         code="AF",
-    ),
-    Country(
-        name="Åland Islands",
-        code="AX",
+        osm_id=303427,
     ),
     Country(
         name="Albania",
         code="AL",
+        osm_id=53292,
     ),
     Country(
         name="Algeria",
         code="DZ",
-    ),
-    Country(
-        name="American Samoa",
-        code="AS",
+        osm_id=192756,
     ),
     Country(
         name="Andorra",
         code="AD",
+        osm_id=9407,
     ),
     Country(
         name="Angola",
         code="AO",
-    ),
-    Country(
-        name="Anguilla",
-        code="AI",
-    ),
-    Country(
-        name="Antarctica",
-        code="AQ",
+        osm_id=195267,
     ),
     Country(
         name="Antigua and Barbuda",
         code="AG",
+        osm_id=536900,
     ),
     Country(
         name="Argentina",
         code="AR",
+        osm_id=286393,
     ),
     Country(
         name="Armenia",
         code="AM",
+        osm_id=364066,
     ),
     Country(
         name="Aruba",
         code="AW",
+        osm_id=1231749,
     ),
     Country(
         name="Australia",
         code="AU",
+        osm_id=80500,
     ),
     Country(
         name="Austria",
         code="AT",
+        osm_id=16239,
     ),
     Country(
         name="Azerbaijan",
         code="AZ",
+        osm_id=364110,
     ),
     Country(
         name="Bahamas",
         code="BS",
+        osm_id=547469,
     ),
     Country(
         name="Bahrain",
         code="BH",
+        osm_id=378734,
     ),
     Country(
         name="Bangladesh",
         code="BD",
+        osm_id=184640,
     ),
     Country(
         name="Barbados",
         code="BB",
+        osm_id=547511,
     ),
     Country(
         name="Belarus",
         code="BY",
+        osm_id=59065,
     ),
     Country(
         name="Belgium",
         code="BE",
+        osm_id=52411,
     ),
     Country(
         name="Belize",
         code="BZ",
+        osm_id=287827,
     ),
     Country(
         name="Benin",
         code="BJ",
+        osm_id=192784,
     ),
     Country(
         name="Bermuda",
         code="BM",
+        osm_id=1993208,
     ),
     Country(
         name="Bhutan",
         code="BT",
+        osm_id=184629,
     ),
     Country(
         name="Bolivia",
         code="BO",
-    ),
-    Country(
-        name="Bonaire, Sint Eustatius and Saba",
-        code="BQ",
+        osm_id=252645,
     ),
     Country(
         name="Bosnia and Herzegovina",
         code="BA",
+        osm_id=2528142,
     ),
     Country(
         name="Botswana",
         code="BW",
-    ),
-    Country(
-        name="Bouvet Island",
-        code="BV",
+        osm_id=1889339,
     ),
     Country(
         name="Brazil",
         code="BR",
-    ),
-    Country(
-        name="British Indian Ocean Territory",
-        code="IO",
+        osm_id=59470,
     ),
     Country(
         name="Brunei",
         code="BN",
+        osm_id=2103120,
     ),
     Country(
         name="Bulgaria",
         code="BG",
+        osm_id=186382,
     ),
     Country(
         name="Burkina Faso",
         code="BF",
+        osm_id=192783,
     ),
     Country(
         name="Burundi",
         code="BI",
+        osm_id=195269,
     ),
     Country(
         name="Cabo Verde",
         code="CV",
+        osm_id=535774,
     ),
     Country(
         name="Cambodia",
         code="KH",
+        osm_id=49898,
     ),
     Country(
         name="Cameroon",
         code="CM",
+        osm_id=192830,
     ),
     Country(
         name="Canada",
         code="CA",
+        osm_id=1428125,
     ),
     Country(
         name="Cayman Islands",
         code="KY",
+        osm_id=2185366,
     ),
     Country(
         name="Central African Republic",
         code="CF",
+        osm_id=192790,
     ),
     Country(
         name="Chad",
         code="TD",
+        osm_id=2361304,
     ),
     Country(
         name="Chile",
         code="CL",
+        osm_id=167454,
     ),
     Country(
         name="China",
         code="CN",
-    ),
-    Country(
-        name="Christmas Island",
-        code="CX",
-    ),
-    Country(
-        name="Cocos (Keeling) Islands",
-        code="CC",
+        osm_id=270056,
     ),
     Country(
         name="Colombia",
         code="CO",
+        osm_id=120027,
     ),
     Country(
         name="Comoros",
         code="KM",
+        osm_id=535790,
     ),
     Country(
         name="Congo",
         code="CG",
+        osm_id=192794,
     ),
     Country(
         name="Democratic Republic of the Congo",
         code="CD",
+        osm_id=192795,
     ),
     Country(
         name="Cook Islands",
         code="CK",
+        osm_id=2184233,
     ),
     Country(
         name="Costa Rica",
         code="CR",
+        osm_id=287667,
     ),
     Country(
         name="Côte d'Ivoire",
         code="CI",
+        osm_id=192779,
     ),
     Country(
         name="Croatia",
         code="HR",
+        osm_id=214885,
     ),
     Country(
         name="Cuba",
         code="CU",
+        osm_id=307833,
     ),
     Country(
         name="Curaçao",
         code="CW",
+        osm_id=1216719,
     ),
     Country(
         name="Cyprus",
         code="CY",
+        osm_id=3263726,
     ),
     Country(
         name="Czechia",
         code="CZ",
+        osm_id=51684,
     ),
     Country(
         name="Denmark",
         code="DK",
+        osm_id=50046,
     ),
     Country(
         name="Djibouti",
         code="DJ",
+        osm_id=192801,
     ),
     Country(
         name="Dominica",
         code="DM",
+        osm_id=307823,
     ),
     Country(
         name="Dominican Republic",
         code="DO",
+        osm_id=307828,
     ),
     Country(
         name="Ecuador",
         code="EC",
+        osm_id=108089,
     ),
     Country(
         name="Egypt",
         code="EG",
+        osm_id=1473947,
     ),
     Country(
         name="El Salvador",
         code="SV",
+        osm_id=1520612,
     ),
     Country(
         name="Equatorial Guinea",
         code="GQ",
+        osm_id=192791,
     ),
     Country(
         name="Eritrea",
         code="ER",
+        osm_id=296961,
     ),
     Country(
         name="Estonia",
         code="EE",
+        osm_id=79510,
     ),
     Country(
         name="Eswatini",
         code="SZ",
+        osm_id=88210,
     ),
     Country(
         name="Ethiopia",
         code="ET",
-    ),
-    Country(
-        name="Falkland Islands (Malvinas)",
-        code="FK",
+        osm_id=192800,
     ),
     Country(
         name="Faroe Islands",
         code="FO",
+        osm_id=52939,
     ),
     Country(
         name="Fiji",
         code="FJ",
+        osm_id=571747,
     ),
     Country(
         name="Finland",
         code="FI",
+        osm_id=54224,
     ),
     Country(
         name="France",
         code="FR",
-    ),
-    Country(
-        name="French Guiana",
-        code="GF",
-    ),
-    Country(
-        name="French Polynesia",
-        code="PF",
-    ),
-    Country(
-        name="French Southern Territories",
-        code="TF",
+        osm_id=2202162,
     ),
     Country(
         name="Gabon",
         code="GA",
+        osm_id=192793,
     ),
     Country(
         name="Gambia",
         code="GM",
+        osm_id=192774,
     ),
     Country(
         name="Georgia",
         code="GE",
+        osm_id=28699,
     ),
     Country(
         name="Germany",
         code="DE",
+        osm_id=51477,
     ),
     Country(
         name="Ghana",
         code="GH",
-    ),
-    Country(
-        name="Gibraltar",
-        code="GI",
+        osm_id=192781,
     ),
     Country(
         name="Greece",
         code="GR",
+        osm_id=192307,
     ),
     Country(
         name="Greenland",
         code="GL",
+        osm_id=2184073,
     ),
     Country(
         name="Grenada",
         code="GD",
-    ),
-    Country(
-        name="Guadeloupe",
-        code="GP",
-    ),
-    Country(
-        name="Guam",
-        code="GU",
+        osm_id=550727,
     ),
     Country(
         name="Guatemala",
         code="GT",
-    ),
-    Country(
-        name="Guernsey",
-        code="GG",
+        osm_id=1521463,
     ),
     Country(
         name="Guinea",
         code="GN",
+        osm_id=192778,
     ),
     Country(
         name="Guinea-Bissau",
         code="GW",
+        osm_id=192776,
     ),
     Country(
         name="Guyana",
         code="GY",
+        osm_id=287083,
     ),
     Country(
         name="Haiti",
         code="HT",
-    ),
-    Country(
-        name="Heard Island and McDonald Islands",
-        code="HM",
+        osm_id=307829,
     ),
     Country(
         name="Holy See",
         code="VA",
+        osm_id=36989,
     ),
     Country(
         name="Honduras",
         code="HN",
-    ),
-    Country(
-        name="Hong Kong",
-        code="HK",
+        osm_id=287670,
     ),
     Country(
         name="Hungary",
         code="HU",
+        osm_id=21335,
     ),
     Country(
         name="Iceland",
         code="IS",
+        osm_id=299133,
     ),
     Country(
         name="India",
         code="IN",
+        osm_id=304716,
     ),
     Country(
         name="Indonesia",
         code="ID",
+        osm_id=304751,
     ),
     Country(
         name="Iran",
         code="IR",
+        osm_id=304938,
     ),
     Country(
         name="Iraq",
         code="IQ",
+        osm_id=304934,
     ),
     Country(
         name="Ireland",
         code="IE",
-    ),
-    Country(
-        name="Isle of Man",
-        code="IM",
+        osm_id=62273,
     ),
     Country(
         name="Israel",
         code="IL",
+        osm_id=1473946,
     ),
     Country(
         name="Italy",
         code="IT",
+        osm_id=365331,
     ),
     Country(
         name="Jamaica",
         code="JM",
+        osm_id=555017,
     ),
     Country(
         name="Japan",
         code="JP",
-    ),
-    Country(
-        name="Jersey",
-        code="JE",
+        osm_id=382313,
     ),
     Country(
         name="Jordan",
         code="JO",
+        osm_id=184818,
     ),
     Country(
         name="Kazakhstan",
         code="KZ",
+        osm_id=214665,
     ),
     Country(
         name="Kenya",
         code="KE",
+        osm_id=192798,
     ),
     Country(
         name="Kiribati",
         code="KI",
+        osm_id=571178,
     ),
     Country(
         name="North Korea",
         code="KP",
+        osm_id=192734,
     ),
     Country(
         name="South Korea",
         code="KR",
+        osm_id=307756,
     ),
     Country(
         name="Kuwait",
         code="KW",
+        osm_id=305099,
     ),
     Country(
         name="Kyrgyzstan",
         code="KG",
+        osm_id=178009,
     ),
     Country(
         name="Lao People's Democratic Republic",
         code="LA",
+        osm_id=49903,
     ),
     Country(
         name="Latvia",
         code="LV",
+        osm_id=72594,
     ),
     Country(
         name="Lebanon",
         code="LB",
+        osm_id=184843,
     ),
     Country(
         name="Lesotho",
         code="LS",
+        osm_id=2093234,
     ),
     Country(
         name="Liberia",
         code="LR",
+        osm_id=192780,
     ),
     Country(
         name="Libya",
         code="LY",
+        osm_id=192758,
     ),
     Country(
         name="Liechtenstein",
         code="LI",
+        osm_id=1155955,
     ),
     Country(
         name="Lithuania",
         code="LT",
+        osm_id=72596,
     ),
     Country(
         name="Luxembourg",
         code="LU",
-    ),
-    Country(
-        name="Macao",
-        code="MO",
+        osm_id=2171347,
     ),
     Country(
         name="Madagascar",
         code="MG",
+        osm_id=447325,
     ),
     Country(
         name="Malawi",
         code="MW",
+        osm_id=195290,
     ),
     Country(
         name="Malaysia",
         code="MY",
+        osm_id=2108121,
     ),
     Country(
         name="Maldives",
         code="MV",
+        osm_id=536773,
     ),
     Country(
         name="Mali",
         code="ML",
+        osm_id=192785,
     ),
     Country(
         name="Malta",
         code="MT",
+        osm_id=365307,
     ),
     Country(
         name="Marshall Islands",
         code="MH",
-    ),
-    Country(
-        name="Martinique",
-        code="MQ",
+        osm_id=571771,
     ),
     Country(
         name="Mauritania",
         code="MR",
+        osm_id=192763,
     ),
     Country(
         name="Mauritius",
         code="MU",
-    ),
-    Country(
-        name="Mayotte",
-        code="YT",
+        osm_id=535828,
     ),
     Country(
         name="Mexico",
         code="MX",
+        osm_id=114686,
     ),
     Country(
         name="Micronesia",
         code="FM",
+        osm_id=571802,
     ),
     Country(
         name="Moldova",
         code="MD",
+        osm_id=58974,
     ),
     Country(
         name="Monaco",
         code="MC",
+        osm_id=36990,
     ),
     Country(
         name="Mongolia",
         code="MN",
+        osm_id=161033,
     ),
     Country(
         name="Montenegro",
         code="ME",
-    ),
-    Country(
-        name="Montserrat",
-        code="MS",
+        osm_id=53296,
     ),
     Country(
         name="Morocco",
         code="MA",
+        osm_id=3630439,
     ),
     Country(
         name="Mozambique",
         code="MZ",
+        osm_id=195273,
     ),
     Country(
         name="Myanmar",
         code="MM",
+        osm_id=50371,
     ),
     Country(
         name="Namibia",
         code="NA",
+        osm_id=195266,
     ),
     Country(
         name="Nauru",
         code="NR",
+        osm_id=571804,
     ),
     Country(
         name="Nepal",
         code="NP",
+        osm_id=184633,
     ),
     Country(
         name="Netherlands",
         code="NL",
-    ),
-    Country(
-        name="New Caledonia",
-        code="NC",
+        osm_id=2323309,
     ),
     Country(
         name="New Zealand",
         code="NZ",
+        osm_id=556706,
     ),
     Country(
         name="Nicaragua",
         code="NI",
+        osm_id=287666,
     ),
     Country(
         name="Niger",
         code="NE",
+        osm_id=192786,
     ),
     Country(
         name="Nigeria",
         code="NG",
+        osm_id=192787,
     ),
     Country(
         name="Niue",
         code="NU",
-    ),
-    Country(
-        name="Norfolk Island",
-        code="NF",
+        osm_id=3548481,
     ),
     Country(
         name="North Macedonia",
         code="MK",
-    ),
-    Country(
-        name="Northern Mariana Islands",
-        code="MP",
+        osm_id=53293,
     ),
     Country(
         name="Norway",
         code="NO",
+        osm_id=2978650,
     ),
     Country(
         name="Oman",
         code="OM",
+        osm_id=305138,
     ),
     Country(
         name="Pakistan",
         code="PK",
+        osm_id=307573,
     ),
     Country(
         name="Palau",
         code="PW",
+        osm_id=571805,
     ),
     Country(
         name="Palestine",
         code="PS",
+        osm_id=1703814,
     ),
     Country(
         name="Panama",
         code="PA",
+        osm_id=287668,
     ),
     Country(
         name="Papua New Guinea",
         code="PG",
+        osm_id=307866,
     ),
     Country(
         name="Paraguay",
         code="PY",
+        osm_id=287077,
     ),
     Country(
         name="Peru",
         code="PE",
+        osm_id=288247,
     ),
     Country(
         name="Philippines",
         code="PH",
-    ),
-    Country(
-        name="Pitcairn",
-        code="PN",
+        osm_id=443174,
     ),
     Country(
         name="Poland",
         code="PL",
+        osm_id=49715,
     ),
     Country(
         name="Portugal",
         code="PT",
-    ),
-    Country(
-        name="Puerto Rico",
-        code="PR",
+        osm_id=295480,
     ),
     Country(
         name="Qatar",
         code="QA",
-    ),
-    Country(
-        name="Réunion",
-        code="RE",
+        osm_id=305095,
     ),
     Country(
         name="Romania",
         code="RO",
+        osm_id=90689,
     ),
     Country(
         name="Russian Federation",
         code="RU",
+        osm_id=60189,
     ),
     Country(
         name="Rwanda",
         code="RW",
-    ),
-    Country(
-        name="Saint Barthélemy",
-        code="BL",
-    ),
-    Country(
-        name="Saint Helena, Ascension and Tristan da Cunha",
-        code="SH",
+        osm_id=171496,
     ),
     Country(
         name="Saint Kitts and Nevis",
         code="KN",
+        osm_id=536899,
     ),
     Country(
         name="Saint Lucia",
         code="LC",
-    ),
-    Country(
-        name="Saint Martin (French part)",
-        code="MF",
-    ),
-    Country(
-        name="Saint Pierre and Miquelon",
-        code="PM",
+        osm_id=550728,
     ),
     Country(
         name="Saint Vincent and the Grenadines",
         code="VC",
+        osm_id=550725,
     ),
     Country(
         name="Samoa",
         code="WS",
+        osm_id=1872673,
     ),
     Country(
         name="San Marino",
         code="SM",
+        osm_id=54624,
     ),
     Country(
         name="Sao Tome and Principe",
         code="ST",
+        osm_id=535880,
     ),
     Country(
         name="Saudi Arabia",
         code="SA",
+        osm_id=307584,
     ),
     Country(
         name="Senegal",
         code="SN",
+        osm_id=192775,
     ),
     Country(
         name="Serbia",
         code="RS",
+        osm_id=1741311,
     ),
     Country(
         name="Seychelles",
         code="SC",
+        osm_id=536765,
     ),
     Country(
         name="Sierra Leone",
         code="SL",
+        osm_id=192777,
     ),
     Country(
         name="Singapore",
         code="SG",
-    ),
-    Country(
-        name="Sint Maarten (Dutch part)",
-        code="SX",
+        osm_id=536780,
     ),
     Country(
         name="Slovakia",
         code="SK",
+        osm_id=14296,
     ),
     Country(
         name="Slovenia",
         code="SI",
+        osm_id=218657,
     ),
     Country(
         name="Solomon Islands",
         code="SB",
+        osm_id=1857436,
     ),
     Country(
         name="Somalia",
         code="SO",
+        osm_id=192799,
     ),
     Country(
         name="South Africa",
         code="ZA",
-    ),
-    Country(
-        name="South Georgia and the South Sandwich Islands",
-        code="GS",
+        osm_id=87565,
     ),
     Country(
         name="South Sudan",
         code="SS",
+        osm_id=1656678,
     ),
     Country(
         name="Spain",
         code="ES",
+        osm_id=1311341,
     ),
     Country(
         name="Sri Lanka",
         code="LK",
+        osm_id=536807,
     ),
     Country(
         name="Sudan",
         code="SD",
+        osm_id=192789,
     ),
     Country(
         name="Suriname",
         code="SR",
-    ),
-    Country(
-        name="Svalbard and Jan Mayen",
-        code="SJ",
+        osm_id=287082,
     ),
     Country(
         name="Sweden",
         code="SE",
+        osm_id=52822,
     ),
     Country(
         name="Switzerland",
         code="CH",
+        osm_id=51701,
     ),
     Country(
         name="Syria",
         code="SY",
+        osm_id=184840,
     ),
     Country(
         name="Taiwan",
         code="TW",
+        osm_id=449220,
     ),
     Country(
         name="Tajikistan",
         code="TJ",
+        osm_id=214626,
     ),
     Country(
         name="Tanzania",
         code="TZ",
+        osm_id=195270,
     ),
     Country(
         name="Thailand",
         code="TH",
+        osm_id=2067731,
     ),
     Country(
         name="Timor-Leste",
         code="TL",
+        osm_id=305142,
     ),
     Country(
         name="Togo",
         code="TG",
-    ),
-    Country(
-        name="Tokelau",
-        code="TK",
+        osm_id=192782,
     ),
     Country(
         name="Tonga",
         code="TO",
+        osm_id=2186665,
     ),
     Country(
         name="Trinidad and Tobago",
         code="TT",
+        osm_id=555717,
     ),
     Country(
         name="Tunisia",
         code="TN",
+        osm_id=192757,
     ),
     Country(
         name="Türkiye",
         code="TR",
+        osm_id=174737,
     ),
     Country(
         name="Turkmenistan",
         code="TM",
-    ),
-    Country(
-        name="Turks and Caicos Islands",
-        code="TC",
+        osm_id=223026,
     ),
     Country(
         name="Tuvalu",
         code="TV",
+        osm_id=2177266,
     ),
     Country(
         name="Uganda",
         code="UG",
+        osm_id=192796,
     ),
     Country(
         name="Ukraine",
         code="UA",
+        osm_id=60199,
     ),
     Country(
         name="United Arab Emirates",
         code="AE",
+        osm_id=307763,
     ),
     Country(
         name="United Kingdom of Great Britain and Northern Ireland",
         code="GB",
+        osm_id=62149,
     ),
     Country(
         name="United States of America",
         code="US",
-    ),
-    Country(
-        name="United States Minor Outlying Islands",
-        code="UM",
+        osm_id=148838,
     ),
     Country(
         name="Uruguay",
         code="UY",
+        osm_id=287072,
     ),
     Country(
         name="Uzbekistan",
         code="UZ",
+        osm_id=196240,
     ),
     Country(
         name="Vanuatu",
         code="VU",
+        osm_id=2177246,
     ),
     Country(
         name="Venezuela",
         code="VE",
+        osm_id=272644,
     ),
     Country(
         name="Viet Nam",
         code="VN",
-    ),
-    Country(
-        name="Virgin Islands (British)",
-        code="VG",
-    ),
-    Country(
-        name="Virgin Islands (U.S.)",
-        code="VI",
-    ),
-    Country(
-        name="Wallis and Futuna",
-        code="WF",
-    ),
-    Country(
-        name="Western Sahara",
-        code="EH",
+        osm_id=49915,
     ),
     Country(
         name="Yemen",
         code="YE",
+        osm_id=305092,
     ),
     Country(
         name="Zambia",
         code="ZM",
+        osm_id=195271,
     ),
     Country(
         name="Zimbabwe",
         code="ZW",
+        osm_id=195272,
     ),
 ]
