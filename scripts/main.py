@@ -41,12 +41,12 @@ COUNTRIES_BY_CODE: dict[str, Country] = {c.code: c for c in countries}
 # ---------------------------------------------------------------------------
 # Query builder
 # ---------------------------------------------------------------------------
-def build_query(osm_id: str, place_type: str) -> str:
+def build_query(osm_id: int) -> str:
     return f"""
-[out:json][timeout:1000];
+[out:json][timeout:950];
 rel({osm_id});map_to_area->.searchCountry;
 (
-  node(area.searchCountry)[population][place={place_type}];
+  {"\n".join([f"node(area.searchCountry)[population][place={place_type}];" for place_type in TYPE_ORDER])}
 );
 out tags;
 """
@@ -55,16 +55,20 @@ out tags;
 # ---------------------------------------------------------------------------
 # Fetch data
 # ---------------------------------------------------------------------------
-def _fetch_place_type(osm_id: str, place_type: str) -> list[PlaceRecord]:
-    """Fetch data for a single place type with retry logic."""
-    query = build_query(osm_id, place_type)
+def fetch_all_populations(country: Country) -> PlaceData:
+    query = build_query(country.osm_id)
+    print(f"Querying Overpass API for {country.name} …")
 
     max_retries = 6
     backoff = 6  # seconds to wait on first 429
     for attempt in range(max_retries):
-        OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+        OVERPASS_URL = (
+            "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
+            if attempt == 5
+            else "https://overpass-api.de/api/interpreter"
+        )
 
-        resp = requests.post(OVERPASS_URL, data={"data": query}, timeout=1050)
+        resp = requests.post(OVERPASS_URL, data={"data": query}, timeout=1000)
         if (
             resp.status_code == 429
             or resp.status_code >= 500
@@ -72,27 +76,23 @@ def _fetch_place_type(osm_id: str, place_type: str) -> list[PlaceRecord]:
         ):
             wait = backoff * 2**attempt
             print(
-                f"    {place_type}: HTTP {resp.status_code} — retrying in {wait}s (attempt {attempt + 1}/{max_retries}) …"
+                f"  HTTP {resp.status_code} — retrying in {wait}s (attempt {attempt + 1}/{max_retries}) …"
             )
             time.sleep(wait)
             continue
-        try:
-            resp.raise_for_status()
-        except requests.exceptions.HTTPError as e:
-            raise RuntimeError(
-                f"Failed to fetch {place_type} data after {attempt + 1} attempts: HTTP {resp.status_code} — {resp.reason}"
-            ) from e
+        resp.raise_for_status()
         break
     else:
-        raise RuntimeError(
-            f"Failed to fetch {place_type} data after {max_retries} attempts: all retries exhausted"
-        )
+        resp.raise_for_status()
 
     elements = resp.json().get("elements", [])
-    records: list[PlaceRecord] = []
 
+    data: PlaceData = {pt: [] for pt in PLACE_TYPES}
     for el in elements:
         tags = el.get("tags", {})
+        place_type = tags.get("place", "")
+        if place_type not in data:
+            continue
         raw = tags.get("population", "")
         name = tags.get("name", "")
         lat = el.get("lat")
@@ -104,7 +104,7 @@ def _fetch_place_type(osm_id: str, place_type: str) -> list[PlaceRecord]:
             pop = int(raw.replace(",", "").replace(" ", "").split(".")[0])
             if pop <= 0:
                 continue
-            records.append(
+            data[place_type].append(
                 {
                     "name": name,
                     "population": pop,
@@ -118,26 +118,8 @@ def _fetch_place_type(osm_id: str, place_type: str) -> list[PlaceRecord]:
         except ValueError:
             pass
 
-    return records
-
-
-def fetch_all_populations(country: Country) -> PlaceData:
-    start_time = time.time()
-    print(f"Querying Overpass API for {country.name} …")
-
-    data: PlaceData = {pt: [] for pt in PLACE_TYPES}
-    try:
-        for place_type in PLACE_TYPES:
-            records = _fetch_place_type(country.osm_id, place_type)
-            data[place_type] = records
-            print(f"  {place_type.capitalize()}: {len(records)} records")
-    except RuntimeError as e:
-        elapsed = time.time() - start_time
-        print(f"  ERROR: {e}")
-        raise RuntimeError(f"Failed to fetch data for {country.name}: {e}") from e
-
-    elapsed = time.time() - start_time
-    print(f"  Completed in {elapsed:.1f}s")
+    for pt, records in data.items():
+        print(f"  {pt.capitalize()}: {len(records)} records")
     return data
 
 
@@ -586,6 +568,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
+        "-c",
         "--country",
         metavar="CODE",
         help=(
