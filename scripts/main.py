@@ -11,6 +11,7 @@ import json
 import sys
 import time
 from datetime import datetime, timezone
+from math import atan2, cos, radians, sin, sqrt
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -48,7 +49,7 @@ rel({osm_id});map_to_area->.searchCountry;
 (
   {"\n".join([f"node(area.searchCountry)[population][place={place_type}];" for place_type in TYPE_ORDER])}
 );
-out tags;
+out body;
 """
 
 
@@ -68,13 +69,20 @@ def fetch_all_populations(country: Country) -> PlaceData:
             else "https://overpass-api.de/api/interpreter"
         )
 
-        resp = requests.post(OVERPASS_URL, data={"data": query}, timeout=1000)
+        wait = backoff * 2**attempt
+        try:
+            resp = requests.post(OVERPASS_URL, data={"data": query}, timeout=1000)
+        except requests.exceptions.ConnectionError:
+            print(
+                f"  Connection error — retrying in {wait}s (attempt {attempt + 1}/{max_retries}) …"
+            )
+            time.sleep(wait)
+            continue
         if (
             resp.status_code == 429
             or resp.status_code >= 500
             and attempt < max_retries - 1
         ):
-            wait = backoff * 2**attempt
             print(
                 f"  HTTP {resp.status_code} — retrying in {wait}s (attempt {attempt + 1}/{max_retries}) …"
             )
@@ -138,6 +146,70 @@ def _norm_logpdf(x: float, mu: float, sigma: float) -> float:
     )
 
 
+def _normalize_score(value: float, min_val: float, max_val: float) -> float:
+    """Normalize a value to [0, 1] range given min and max bounds."""
+    if max_val <= min_val:
+        return 0.0
+    clamped = max(min_val, min(max_val, value))
+    return (clamped - min_val) / (max_val - min_val)
+
+
+def _compute_local_rank_percentile(
+    lat: float,
+    lon: float,
+    pop: float,
+    neighbors: list[PlaceRecord],
+    distance_threshold_km: float,
+) -> float:
+    """
+    Compute percentile rank of a place among neighbors within distance_threshold_km.
+    Uses Haversine distance for accurate lat/lon calculations.
+    Returns percentile 0-100.
+
+    Args:
+        lat, lon: coordinates of the place to rank
+        pop: population of the place to rank
+        neighbors: list of all neighboring places
+        distance_threshold_km: maximum distance to consider
+
+    Returns:
+        percentile (0-100) of the place's population among nearby places
+    """
+    if not neighbors:
+        return 50.0  # No neighbors, default to middle
+
+    # Haversine distance calculation
+    def haversine_km(lat1, lon1, lat2, lon2):
+        """Calculate distance in km between two lat/lon points."""
+        R = 6371.0  # Earth radius in km
+        lat1_rad, lon1_rad = radians(lat1), radians(lon1)
+        lat2_rad, lon2_rad = radians(lat2), radians(lon2)
+
+        dlat = lat2_rad - lat1_rad
+        dlon = lon2_rad - lon1_rad
+
+        a = sin(dlat / 2) ** 2 + cos(lat1_rad) * cos(lat2_rad) * sin(dlon / 2) ** 2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return R * c
+
+    # Filter neighbors by distance
+    nearby = [
+        n
+        for n in neighbors
+        if haversine_km(lat, lon, n["lat"], n["lon"]) <= distance_threshold_km
+    ]
+
+    if not nearby:
+        return 50.0
+
+    # Get populations of nearby places
+    nearby_pops = np.array([n["population"] for n in nearby], dtype=float)
+
+    # Percentile: fraction of neighbors with lower or equal population
+    percentile = _percentile_of_score(nearby_pops, pop)
+    return percentile
+
+
 def _make_explanation(
     pop: int,
     place_type: str,
@@ -176,28 +248,46 @@ def _make_explanation(
 # ---------------------------------------------------------------------------
 def analyze_classification(data: PlaceData) -> PlaceData:
     """
-    Hybrid misclassification analysis run independently per place type.
+    Hybrid misclassification analysis with scoring system and spatial component.
 
     For each record, mutates in-place adding:
       - own_percentile       – percentile rank within its own type (0–100)
       - upgrade_percentile   – percentile rank within the next-higher type, or None
       - downgrade_percentile – percentile rank within the next-lower type, or None
-      - flag                 – "upgrade" | "downgrade" | "consistent"
-      - confidence           – "strong" | "weak" | "monitor" | "consistent"
-      - explanation          – human-readable summary
+      - local_rank_percentile – percentile rank among neighbors within distance threshold
+
+      - llr_up_score        – normalized [0-1] LLR score for upgrade
+      - llr_down_score      – normalized [0-1] LLR score for downgrade
+      - local_rank_score    – normalized [0-1] local rank signal
+      - percentile_up_bonus – normalized [0-1] percentile corroboration for upgrade
+      - percentile_down_bonus – normalized [0-1] percentile corroboration for downgrade
+
+      - upgrade_score       – combined upgrade signal [0-1]
+      - downgrade_score     – combined downgrade signal [0-1]
+      - net_score          – upgrade_score - downgrade_score
+      - strength           – absolute value of net_score
+
+      - flag                – "upgrade" | "downgrade" | "consistent"
+      - confidence          – "strong" | "weak" | "monitor" | "consistent"
+      - explanation         – human-readable summary
 
     Approach:
-      1. Fit a log-normal distribution (mean/std of log10 populations) per type.
-      2. Compute log-likelihood ratio (LLR) of each record under adjacent-type
-         distributions vs its own (approach 2 — cross-type overlap).
-      3. Compute percentile rank within own type and adjacent types
-         (approach 3 — cross-type percentile comparison).
-      4. Combine both signals to assign flag + confidence tier.
+      1. Fit log-normal distribution per type.
+      2. Compute LLR (log-likelihood ratio) for upgrade/downgrade signals.
+      3. Compute percentile ranks (global and local spatial).
+      4. Normalize all signals to [0-1] scale.
+      5. Combine signals equally weighted to get final scores.
+      6. Determine flag + confidence based on net_score strength.
     """
+    # Distance thresholds by place type (km)
+    DISTANCE_THRESHOLDS = {
+        "city": 100,
+        "town": 50,
+        "village": 25,
+    }
+
     # ── Step 1: fit log-normal params and collect raw pop arrays per type ──
-    log_params: dict[
-        str, tuple[float, float]
-    ] = {}  # type -> (mu, sigma) in log10 space
+    log_params: dict[str, tuple[float, float]] = {}
     all_pops: dict[str, np.ndarray] = {}
 
     for place_type, records in data.items():
@@ -215,7 +305,12 @@ def analyze_classification(data: PlaceData) -> PlaceData:
             f"geometric mean pop: {10**mu:,.0f}"
         )
 
-    # ── Step 2 & 3: score every record ──
+    # Flatten all places for spatial lookups
+    all_places_flat = []
+    for place_type, records in data.items():
+        all_places_flat.extend(records)
+
+    # ── Step 2: score every record using scoring system ──
     for place_type, records in data.items():
         type_idx = TYPE_ORDER.index(place_type)
         upper_type = TYPE_ORDER[type_idx - 1] if type_idx > 0 else None
@@ -232,8 +327,10 @@ def analyze_classification(data: PlaceData) -> PlaceData:
         for r in records:
             pop = r["population"]
             log_pop = np.log10(pop)
+            lat = r["lat"]
+            lon = r["lon"]
 
-            # Percentile ranks
+            # ── Global percentile ranks ──
             own_pct = _percentile_of_score(own_pops, pop)
             up_pct = (
                 _percentile_of_score(upper_pops, pop)
@@ -246,65 +343,137 @@ def analyze_classification(data: PlaceData) -> PlaceData:
                 else None
             )
 
-            # Log-likelihood ratios vs adjacent types
+            # ── Local spatial percentile rank ──
+            distance_threshold = DISTANCE_THRESHOLDS.get(place_type, 50)
+            local_rank_pct = _compute_local_rank_percentile(
+                lat, lon, pop, all_places_flat, distance_threshold
+            )
+
+            # ── Log-likelihood ratios vs adjacent types ──
             curr_ll = _norm_logpdf(log_pop, mu_curr, sigma_curr)
 
             llr_up: float | None = None
             if upper_type and upper_type in log_params:
                 mu_up, sigma_up = log_params[upper_type]
-                llr_up = round(_norm_logpdf(log_pop, mu_up, sigma_up) - curr_ll, 3)
+                llr_up = _norm_logpdf(log_pop, mu_up, sigma_up) - curr_ll
 
             llr_down: float | None = None
             if lower_type and lower_type in log_params:
                 mu_down, sigma_down = log_params[lower_type]
-                llr_down = round(
-                    _norm_logpdf(log_pop, mu_down, sigma_down) - curr_ll, 3
-                )
+                llr_down = _norm_logpdf(log_pop, mu_down, sigma_down) - curr_ll
+
+            # ── Normalize LLR scores to [0, 1] ──
+            # LLR range: typically [-5, 5], normalize to [0, 1]
+            llr_up_score = (
+                _normalize_score(llr_up or 0.0, -3.0, 3.0)
+                if llr_up is not None
+                else 0.0
+            )
+            llr_down_score = (
+                _normalize_score(llr_down or 0.0, -3.0, 3.0)
+                if llr_down is not None
+                else 0.0
+            )
+
+            # ── Local rank score: signal based on local vs global importance ──
+            # A place that is important locally but labeled as low-tier might be mislabeled
+            # Conversely, a place that is unimportant locally but labeled as high-tier might be mislabeled
+            local_rank_score = 0.0
+            if place_type == "village":
+                # Villages: being locally important suggests upgrade
+                # If in top 50% locally, signal for upgrade
+                if local_rank_pct > 50:
+                    local_rank_score = _normalize_score(local_rank_pct, 50.0, 100.0)
+                # If in bottom 10% locally, signal for downgrade (incorrect classification)
+                elif local_rank_pct < 10:
+                    local_rank_score = -_normalize_score(local_rank_pct, 0.0, 10.0)
+            elif place_type == "city":
+                # Cities: being locally dominant is GOOD (confirms classification)
+                # If in bottom 30% locally, that's suspicious - signal for downgrade
+                if local_rank_pct < 30:
+                    local_rank_score = _normalize_score(
+                        30.0 - local_rank_pct, 0.0, 30.0
+                    )
+                # High local rank is GOOD for cities - no signal, it confirms the classification
+            elif place_type == "town":
+                # Towns: being locally important suggests upgrade to city
+                if local_rank_pct > 70:
+                    # High locally, might be a city
+                    local_rank_score = (
+                        _normalize_score(local_rank_pct, 70.0, 100.0) * 0.6
+                    )
+                # Being locally unimportant suggests downgrade to village
+                elif local_rank_pct < 30:
+                    # Low locally, might be a village
+                    local_rank_score = (
+                        -_normalize_score(local_rank_pct, 0.0, 30.0) * 0.6
+                    )
+
+            # ── Percentile corroboration bonuses ──
+            percentile_up_bonus = 0.0
+            if up_pct is not None and own_pct >= 75:
+                # High in own type, check if reasonable in target type
+                if 20 <= up_pct <= 65:
+                    percentile_up_bonus = _normalize_score(own_pct, 75.0, 100.0)
+
+            percentile_down_bonus = 0.0
+            if down_pct is not None and own_pct <= 25:
+                # Low in own type, check if reasonable in target type
+                if 35 <= down_pct <= 80:
+                    percentile_down_bonus = _normalize_score(25.0 - own_pct, 0.0, 25.0)
+
+            # ── Combine scores (equal weighting) ──
+            upgrade_score = (
+                llr_up_score + max(0.0, local_rank_score) + percentile_up_bonus
+            ) / 3.0
+            downgrade_score = (
+                llr_down_score + max(0.0, -local_rank_score) + percentile_down_bonus
+            ) / 3.0
+
+            net_score = upgrade_score - downgrade_score
+            strength = abs(net_score)
 
             # ── Determine flag ──
-            upgrade_ll_signal = llr_up is not None and llr_up > 0
-            downgrade_ll_signal = llr_down is not None and llr_down > 0
-
-            if upgrade_ll_signal and downgrade_ll_signal:
-                # Both fire — follow the stronger LLR
-                flag = "upgrade" if (llr_up or 0) >= (llr_down or 0) else "downgrade"
-            elif upgrade_ll_signal:
+            if net_score > 0.1:
                 flag = "upgrade"
-            elif downgrade_ll_signal:
+            elif net_score < -0.1:
                 flag = "downgrade"
             else:
                 flag = "consistent"
 
             # ── Determine confidence ──
-            # "strong"    – LLR > 1.0 and percentile rank corroborates
-            # "weak"      – LLR > 0 (distribution signal present)
-            # "monitor"   – no LLR signal but extreme percentile in own type
-            # "consistent"– no signal
-            if flag == "upgrade":
-                pct_corroborates = up_pct is not None and 20 <= up_pct <= 65
-                if (llr_up or 0) > 1.0 and own_pct >= 75 and pct_corroborates:
-                    confidence = "strong"
-                else:
-                    confidence = "weak"
-            elif flag == "downgrade":
-                pct_corroborates = down_pct is not None and 35 <= down_pct <= 80
-                if (llr_down or 0) > 1.0 and own_pct <= 25 and pct_corroborates:
-                    confidence = "strong"
-                else:
-                    confidence = "weak"
+            if strength >= 0.67:
+                confidence = "strong"
+            elif strength >= 0.33:
+                confidence = "weak"
+            elif flag == "consistent" and (
+                (upper_type and own_pct >= 90) or (lower_type and own_pct <= 10)
+            ):
+                confidence = "monitor"
             else:
-                # No LLR signal — check for extreme percentile worth monitoring
-                if (upper_type and own_pct >= 90) or (lower_type and own_pct <= 10):
-                    flag = "consistent"
-                    confidence = "monitor"
-                else:
-                    confidence = "consistent"
+                confidence = "consistent"
 
+            # Store all results
             r["own_percentile"] = round(own_pct, 1)
             r["upgrade_percentile"] = round(up_pct, 1) if up_pct is not None else None
             r["downgrade_percentile"] = (
                 round(down_pct, 1) if down_pct is not None else None
             )
+            r["local_rank_percentile"] = round(local_rank_pct, 1)
+
+            # Intermediate scores
+            r["llr_up_score"] = round(llr_up_score, 3)
+            r["llr_down_score"] = round(llr_down_score, 3)
+            r["local_rank_score"] = round(local_rank_score, 3)
+            r["percentile_up_bonus"] = round(percentile_up_bonus, 3)
+            r["percentile_down_bonus"] = round(percentile_down_bonus, 3)
+
+            # Final scores
+            r["upgrade_score"] = round(upgrade_score, 3)
+            r["downgrade_score"] = round(downgrade_score, 3)
+            r["net_score"] = round(net_score, 3)
+            r["strength"] = round(strength, 3)
+
             r["flag"] = flag
             r["confidence"] = confidence
             r["explanation"] = _make_explanation(
@@ -344,6 +513,18 @@ def write_geojson(data: PlaceData, country_code: str) -> None:
                         "own_percentile": r.get("own_percentile"),
                         "upgrade_percentile": r.get("upgrade_percentile"),
                         "downgrade_percentile": r.get("downgrade_percentile"),
+                        "local_rank_percentile": r.get("local_rank_percentile"),
+                        # Intermediate scores
+                        "llr_up_score": r.get("llr_up_score"),
+                        "llr_down_score": r.get("llr_down_score"),
+                        "local_rank_score": r.get("local_rank_score"),
+                        "percentile_up_bonus": r.get("percentile_up_bonus"),
+                        "percentile_down_bonus": r.get("percentile_down_bonus"),
+                        # Final scores
+                        "upgrade_score": r.get("upgrade_score"),
+                        "downgrade_score": r.get("downgrade_score"),
+                        "net_score": r.get("net_score"),
+                        "strength": r.get("strength"),
                         "flag": r.get("flag", "consistent"),
                         "confidence": r.get("confidence", "consistent"),
                         "osm_type": r.get("osm_type"),

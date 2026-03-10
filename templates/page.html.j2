@@ -265,6 +265,15 @@
     }
     .pct-number.is-notable { color: var(--text); }
 
+    .score-number {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-family: "DM Mono", monospace;
+    }
+    .score-number.is-strong { color: var(--text); font-weight: 500; }
+    .score-number.is-weak { color: var(--text-muted); }
+
     .rank-cell {
       color: var(--text-muted);
       font-size: 0.78rem;
@@ -883,7 +892,11 @@
         <th>Type</th>
         <th>Population</th>
         <th>Own %ile</th>
-        <th>{{ cross_col_label }}</th>
+        <th>Local %ile</th>
+        <th>LLR</th>
+        <th>Local Rank</th>
+        <th>Percentile Bonus</th>
+        <th>Strength</th>
         <th>Signal</th>
         <th>Edit</th>
         <th>OSM</th>
@@ -905,13 +918,42 @@
           </span>
         </td>
         <td>
-          {% set cross_val = p[cross_attr] %}
-          {% if cross_val is not none %}
-          <span class="pct-number {{ 'is-notable' if 20 <= cross_val <= 65 else '' }}">
-            {{ cross_val | round(0) | int }}%
-          </span>
+          {% if p.local_rank_percentile is not none %}
+          <span class="pct-number">{{ p.local_rank_percentile | round(0) | int }}%</span>
           {% else %}
           <span class="pct-number">—</span>
+          {% endif %}
+        </td>
+        <td>
+          {% set llr_score = p.llr_up_score if direction == "upgrade" else p.llr_down_score %}
+          {% if llr_score is not none %}
+          <span class="score-number">{{ "%.2f" | format(llr_score) }}</span>
+          {% else %}
+          <span class="score-number">—</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if p.local_rank_score is not none %}
+          <span class="score-number">{{ "%.2f" | format(p.local_rank_score) }}</span>
+          {% else %}
+          <span class="score-number">—</span>
+          {% endif %}
+        </td>
+        <td>
+          {% set pct_bonus = p.percentile_up_bonus if direction == "upgrade" else p.percentile_down_bonus %}
+          {% if pct_bonus is not none %}
+          <span class="score-number">{{ "%.2f" | format(pct_bonus) }}</span>
+          {% else %}
+          <span class="score-number">—</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if p.strength is not none %}
+          <span class="score-number {{ 'is-strong' if p.strength >= 0.67 else 'is-weak' if p.strength >= 0.33 else '' }}">
+            {{ "%.2f" | format(p.strength) }}
+          </span>
+          {% else %}
+          <span class="score-number">—</span>
           {% endif %}
         </td>
         <td>{{ conf_badge(p.confidence) }}</td>
